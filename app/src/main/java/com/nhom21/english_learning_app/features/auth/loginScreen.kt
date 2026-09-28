@@ -111,7 +111,7 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
-                // Viền rim-light tinh tế khi ở Dark Mode (Mục 8)
+                // Viền rim-light khi ở Dark Mode (Mục 8)
                 if (isDark) {
                     Box(
                         modifier = Modifier
