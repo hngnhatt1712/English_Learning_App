@@ -32,3 +32,21 @@ google-services.json
 
 # Android Profiling
 *.hprof
+plan.md
+system_promt.md
+owla-design-system-skill.md
+task.md
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Environment
+.env
+
+# Alembic
+*.db
+
+# Firebase
+service-account-key.json
