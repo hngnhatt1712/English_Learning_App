@@ -10,19 +10,19 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel quản lý logic và trạng thái UI cho màn hình Đăng ký (SignUpScreen).
- * Các trường tên đăng nhập/email/số điện thoại, họ tên, mật khẩu đều được để trống mặc định.
+ * Các trường tên đăng nhập, email, mật khẩu đều được để trống mặc định.
  */
 class SignUpViewModel : ViewModel() {
 
     var uiState by mutableStateOf(SignUpUiState())
         private set
 
-    fun onFullNameChange(newValue: String) {
-        uiState = uiState.copy(fullName = newValue, errorMessage = null)
+    fun onUsernameChange(newValue: String) {
+        uiState = uiState.copy(username = newValue, errorMessage = null)
     }
 
-    fun onIdentifierChange(newValue: String) {
-        uiState = uiState.copy(identifier = newValue, errorMessage = null)
+    fun onEmailChange(newValue: String) {
+        uiState = uiState.copy(email = newValue, errorMessage = null)
     }
 
     fun onPasswordChange(newValue: String) {
@@ -51,11 +51,11 @@ class SignUpViewModel : ViewModel() {
 
     fun register(onSuccess: () -> Unit) {
         val state = uiState
-        if (state.fullName.isBlank() || state.identifier.isBlank() || state.password.isBlank() || state.confirmPassword.isBlank()) {
+        if (state.username.isBlank() || state.email.isBlank() || state.password.isBlank() || state.confirmPassword.isBlank()) {
             uiState = state.copy(errorMessage = "Vui lòng điền đầy đủ tất cả các trường!")
             return
         }
-        if (!state.identifier.trim().lowercase().endsWith("@gmail.com")) {
+        if (!state.email.trim().lowercase().endsWith("@gmail.com")) {
             uiState = state.copy(errorMessage = "Email phải có đuôi @gmail.com!")
             return
         }

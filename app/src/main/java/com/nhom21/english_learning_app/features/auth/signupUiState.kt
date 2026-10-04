@@ -4,8 +4,8 @@ package com.nhom21.english_learning_app.features.auth
  * UI State cho màn hình Đăng ký (SignUpScreen) của ứng dụng Owla English.
  */
 data class SignUpUiState(
-    val fullName: String = "",
-    val identifier: String = "",
+    val username: String = "",
+    val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
     val isPasswordVisible: Boolean = false,

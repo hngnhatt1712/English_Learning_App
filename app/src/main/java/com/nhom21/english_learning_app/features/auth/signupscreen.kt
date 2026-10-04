@@ -83,8 +83,8 @@ import com.nhom21.english_learning_app.ui.theme.Quicksand
 fun SignUpScreen(
     modifier: Modifier = Modifier,
     uiState: SignUpUiState = SignUpUiState(),
-    onFullNameChange: (String) -> Unit = {},
-    onIdentifierChange: (String) -> Unit = {},
+    onUsernameChange: (String) -> Unit = {},
+    onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
     onConfirmPasswordChange: (String) -> Unit = {},
     onTogglePasswordVisibility: () -> Unit = {},
@@ -169,10 +169,10 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 3. Ô nhập Họ và tên
+            // 3. Ô nhập Tên đăng nhập
             OutlinedTextField(
-                value = uiState.fullName,
-                onValueChange = onFullNameChange,
+                value = uiState.username,
+                onValueChange = onUsernameChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
@@ -200,14 +200,14 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 4. Ô nhập Email hoặc số điện thoại
+            // 4. Ô nhập Email
             OutlinedTextField(
-                value = uiState.identifier,
-                onValueChange = onIdentifierChange,
+                value = uiState.email,
+                onValueChange = onEmailChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        text = "Email hoặc số điện thoại",
+                        text = "Email",
                         fontFamily = Quicksand,
                         color = textSecondary,
                         fontSize = 15.sp
@@ -537,8 +537,8 @@ fun SignUpScreenEmptyPreview() {
 
     SignUpScreen(
         uiState = state,
-        onFullNameChange = { state = state.copy(fullName = it) },
-        onIdentifierChange = { state = state.copy(identifier = it) },
+        onUsernameChange = { state = state.copy(username = it) },
+        onEmailChange = { state = state.copy(email = it) },
         onPasswordChange = { state = state.copy(password = it) },
         onConfirmPasswordChange = { state = state.copy(confirmPassword = it) },
         onTogglePasswordVisibility = { state = state.copy(isPasswordVisible = !state.isPasswordVisible) },
@@ -553,8 +553,8 @@ fun SignUpScreenEmptyPreview() {
 fun SignUpScreenErrorPreview() {
     SignUpScreen(
         uiState = SignUpUiState(
-            fullName = "Nguyễn Văn A",
-            identifier = "nguyenvana@owla.edu",
+            username = "Nguyễn Văn A",
+            email = "nguyenvana@owla.edu",
             password = "123",
             confirmPassword = "1234",
             selectedLevel = "A2",
@@ -569,8 +569,8 @@ fun SignUpScreenErrorPreview() {
 fun SignUpScreenLoadingPreview() {
     SignUpScreen(
         uiState = SignUpUiState(
-            fullName = "Trần Thị B",
-            identifier = "tranthib@owla.edu",
+            username = "Trần Thị B",
+            email = "tranthib@owla.edu",
             password = "securepassword",
             confirmPassword = "securepassword",
             selectedLevel = "B1",
@@ -590,8 +590,8 @@ fun SignUpScreenDarkModePreview() {
     Surface(color = OwlaColors.DarkBackground) {
         SignUpScreen(
             uiState = SignUpUiState(
-                fullName = "Night Owl",
-                identifier = "nightowl@owla.edu",
+                username = "Night Owl",
+                email = "nightowl@owla.edu",
                 selectedLevel = "A1",
                 isTermsAccepted = true
             )
@@ -612,8 +612,8 @@ fun SignUpRoute(
     SignUpScreen(
         modifier = modifier,
         uiState = viewModel.uiState,
-        onFullNameChange = viewModel::onFullNameChange,
-        onIdentifierChange = viewModel::onIdentifierChange,
+        onUsernameChange = viewModel::onUsernameChange,
+        onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
         onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
         onTogglePasswordVisibility = viewModel::onTogglePasswordVisibility,
