@@ -1,7 +1,8 @@
 """Model User đại diện cho người dùng của hệ thống."""
 from datetime import date, datetime
+import uuid
 
-from sqlalchemy import Date, DateTime, Integer, String, func, text
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Uuid, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base
@@ -12,13 +13,17 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    # FK -> levels.id sẽ được thêm bằng migration riêng ngay sau khi bảng levels được tạo (Sprint 3)
-    selected_level_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    selected_level_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("levels.id", ondelete="SET NULL", name="fk_users_selected_level_id_levels"),
+        nullable=True,
+        default=None,
+    )
 
     current_streak: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")
@@ -30,3 +35,4 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
+
