@@ -1,13 +1,12 @@
 """Auth schemas (contract 6.2, 7.2)."""
 import re
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
-
-from pydantic import EmailStr, Field, field_validator
 
 from app.core.schemas import CamelModel
 from app.schemas.types import USERNAME_MAX, USERNAME_MIN, USERNAME_PATTERN, UtcDatetime
+from pydantic import EmailStr, Field, StringConstraints, field_validator
 
 _HAS_LETTER = re.compile(r"[A-Za-z]")
 _HAS_DIGIT = re.compile(r"[0-9]")
@@ -68,5 +67,11 @@ class AuthResultDto(CamelModel):
     user: UserDto
 
 
+FcmToken = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=4096),
+]
+
+
 class LogoutRequest(CamelModel):
-    fcm_token: str | None = Field(default=None, min_length=1, max_length=4096, repr=False)
+    fcm_token: FcmToken | None = Field(default=None, repr=False)

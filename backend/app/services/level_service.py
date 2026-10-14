@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Sequence
-from typing import AbstractSet, Optional
+from typing import AbstractSet, Any, Optional
 
 from sqlalchemy.orm import Session
 
@@ -49,7 +49,7 @@ MAX_STARS_TOTAL: int = MAX_STARS_PER_LEVEL * TOTAL_LEVELS  # 135
 # ---------------------------------------------------------------------------
 
 def compute_status_map(
-    levels: Sequence[Level],
+    levels: Sequence[Level | Any],
     selected_level_id: Optional[uuid.UUID],
     completed_level_ids: AbstractSet[uuid.UUID] = frozenset(),
     progress_level_ids: AbstractSet[uuid.UUID] = frozenset(),
@@ -102,7 +102,7 @@ def compute_status_map(
 
 def is_level_unlocked(
     level_id: uuid.UUID,
-    levels: Sequence[Level],
+    levels: Sequence[Level | Any],
     selected_level_id: Optional[uuid.UUID],
     completed_level_ids: AbstractSet[uuid.UUID] = frozenset(),
     progress_level_ids: AbstractSet[uuid.UUID] = frozenset(),
@@ -128,7 +128,7 @@ def is_level_unlocked(
     return status in (ContentStatus.UNLOCKED, ContentStatus.COMPLETED)
 
 
-def _build_level_dto(level: Level, status: ContentStatus) -> LevelDto:
+def _build_level_dto(level: Level | Any, status: ContentStatus) -> LevelDto:
     """Build a LevelDto manually from a Level ORM object.
 
     Sprint 3 placeholders per spec:
@@ -155,9 +155,9 @@ def _build_level_dto(level: Level, status: ContentStatus) -> LevelDto:
 # ---------------------------------------------------------------------------
 
 def list_levels(
-    session: Session,
+    session: Session | Any,
     selected_level_id: Optional[uuid.UUID],
-    repo: Optional[LevelRepository] = None,
+    repo: Optional[LevelRepository | Any] = None,
     completed_level_ids: AbstractSet[uuid.UUID] = frozenset(),
     progress_level_ids: AbstractSet[uuid.UUID] = frozenset(),
 ) -> list[LevelDto]:

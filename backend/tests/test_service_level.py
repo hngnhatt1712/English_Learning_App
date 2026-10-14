@@ -44,7 +44,7 @@ from app.services.level_service import (
     is_level_unlocked,
     list_levels,
 )
-from fakes import FakeLevelRepository, FakeLevel, FakeSession
+from tests.fakes import FakeLevelRepository, FakeLevel, FakeSession
 
 
 # ---------------------------------------------------------------------------

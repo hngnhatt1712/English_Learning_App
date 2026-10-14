@@ -1,5 +1,6 @@
-from app.models.level import Level  # noqa: F401
-from app.models.user import User  # noqa: F401
+from app.models.device_token import DeviceToken
+from app.models.level import Level
+from app.models.user import User
 
-__all__ = ["Level", "User"]
+__all__ = ["DeviceToken", "Level", "User"]
 

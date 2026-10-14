@@ -95,7 +95,7 @@ def test_level_dto_order_index_constraint():
             id=uuid.uuid4(),
             name="Beginner",
             description=None,
-            order_index=0,  # ge=1 required
+            order_index=0,  # type: ignore[arg-type] # ge=1 required
             status=ContentStatus.LOCKED,
             stars=0,
             max_stars=45,

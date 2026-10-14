@@ -29,10 +29,7 @@ from app.services.auth_service import (
     register,
     to_user_dto,
 )
-try:
-    from fakes import FakeSession, FakeUser, FakeUserRepository
-except ModuleNotFoundError:
-    from tests.fakes import FakeSession, FakeUser, FakeUserRepository
+from tests.fakes import FakeSession, FakeUser, FakeUserRepository
 
 
 # ===========================================================================
@@ -226,6 +223,80 @@ def test_register_integrity_error_unknown_re_raises():
     assert session.rollback_count == 1
 
 
+def test_register_create_user_integrity_error_email_conflict_rollbacks():
+    """Race condition: IntegrityError during create_user (flush) detects email conflict."""
+    session = FakeSession()
+    concurrent = FakeUser(
+        username="other_u",
+        email="race_create@example.com",
+        password_hash=hash_password("Pass1234"),
+    )
+    repo = FakeUserRepository(
+        force_create_integrity_error=True,
+        concurrent_user=concurrent,
+    )
+
+    req = RegisterRequest(
+        username="new_user",
+        email="race_create@example.com",
+        password="Passw0rd123",
+    )
+
+    with pytest.raises(AppError) as exc_info:
+        register(session, req, repo=repo)
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.type == ErrorType.EMAIL_TAKEN.value
+    assert session.rollback_count == 1
+    assert session.commit_count == 0
+
+
+def test_register_create_user_integrity_error_username_conflict_rollbacks():
+    """Race condition: IntegrityError during create_user (flush) detects username conflict."""
+    session = FakeSession()
+    concurrent = FakeUser(
+        username="race_create_u",
+        email="other@example.com",
+        password_hash=hash_password("Pass1234"),
+    )
+    repo = FakeUserRepository(
+        force_create_integrity_error=True,
+        concurrent_user=concurrent,
+    )
+
+    req = RegisterRequest(
+        username="race_create_u",
+        email="unique@example.com",
+        password="Passw0rd123",
+    )
+
+    with pytest.raises(AppError) as exc_info:
+        register(session, req, repo=repo)
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.type == ErrorType.USERNAME_TAKEN.value
+    assert session.rollback_count == 1
+    assert session.commit_count == 0
+
+
+def test_register_create_user_integrity_error_unknown_re_raises():
+    """IntegrityError during create_user without detectable email/username match is re-raised."""
+    session = FakeSession()
+    repo = FakeUserRepository(force_create_integrity_error=True)
+
+    req = RegisterRequest(
+        username="some_user",
+        email="some@example.com",
+        password="Passw0rd123",
+    )
+
+    with pytest.raises(IntegrityError):
+        register(session, req, repo=repo)
+
+    assert session.rollback_count == 1
+    assert session.commit_count == 0
+
+
 def test_register_other_commit_error_rollbacks():
     """Generic exception during commit triggers rollback and re-raises original error."""
     class CustomDbError(Exception):
@@ -292,7 +363,7 @@ def test_register_password_with_whitespace_hashed_verbatim():
 # ===========================================================================
 
 def test_login_by_email_success():
-    """Login with email succeeds and does not invoke commit."""
+    """Login with email succeeds, does not invoke commit, and verifies token expiration."""
     session = FakeSession()
     raw_pw = "MySecret123"
     user = FakeUser(
@@ -302,7 +373,7 @@ def test_login_by_email_success():
     )
     repo = FakeUserRepository(users=[user])
 
-    req = LoginRequest(identifier="JOHN@EXAMPLE.COM", password=raw_pw)
+    req = LoginRequest(identifier="  JOHN@EXAMPLE.COM  ", password=raw_pw)
     result = login(session, req, repo=repo)
 
     assert session.commit_count == 0
@@ -311,9 +382,13 @@ def test_login_by_email_success():
     assert result.token_type == "Bearer"
     assert result.expires_in == 604800
 
+    payload = decode_access_token(result.access_token)
+    assert payload["sub"] == str(user.id)
+    assert payload["exp"] - payload["iat"] == 604800 == result.expires_in
+
 
 def test_login_by_username_success():
-    """Login with username succeeds and does not invoke commit."""
+    """Login with username succeeds, does not invoke commit, and verifies token expiration."""
     session = FakeSession()
     raw_pw = "MySecret123"
     user = FakeUser(
@@ -328,6 +403,12 @@ def test_login_by_username_success():
 
     assert session.commit_count == 0
     assert result.user.username == "john_doe"
+    assert result.token_type == "Bearer"
+    assert result.expires_in == 604800
+
+    payload = decode_access_token(result.access_token)
+    assert payload["sub"] == str(user.id)
+    assert payload["exp"] - payload["iat"] == 604800 == result.expires_in
 
 
 def test_login_wrong_password_raises_invalid_credentials():
@@ -568,29 +649,3 @@ def test_repr_auth_result_dto_does_not_leak_token():
         user=user_dto,
     )
     assert "eyJ_super_secret_jwt_token" not in repr(dto)
-
-
-# ===========================================================================
-# 6. Schema D-06 Group
-# ===========================================================================
-
-def test_schema_d06_unicode_and_boundary_checks():
-    """D-06: 64-char Unicode password accepted, <8 and >64 rejected."""
-    pw_64_unicode = "é" * 62 + "a1"
-    assert len(pw_64_unicode) == 64
-    assert len(pw_64_unicode.encode("utf-8")) > 72
-
-    req = RegisterRequest(
-        username="valid_u",
-        email="valid@example.com",
-        password=pw_64_unicode,
-    )
-    assert req.password == pw_64_unicode
-
-    # 7 chars rejected
-    with pytest.raises(ValidationError):
-        RegisterRequest(username="valid_u", email="v@example.com", password="é" * 5 + "a1")
-
-    # 65 chars rejected
-    with pytest.raises(ValidationError):
-        RegisterRequest(username="valid_u", email="v@example.com", password="é" * 63 + "a1")

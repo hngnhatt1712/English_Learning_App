@@ -261,6 +261,29 @@ def test_auth_result_expires_in_constraint():
     with pytest.raises(ValidationError):
         AuthResultDto(
             access_token="token",
-            expires_in=0,  # ge=1 required
+            expires_in=0,  # type: ignore[arg-type] # ge=1 required
             user=user,
         )
+
+
+def test_schema_d06_unicode_and_boundary_checks():
+    """D-06: 64-char Unicode password accepted, <8 and >64 rejected."""
+    pw_64_unicode = "é" * 62 + "a1"
+    assert len(pw_64_unicode) == 64
+    assert len(pw_64_unicode.encode("utf-8")) > 72
+
+    req = RegisterRequest(
+        username="valid_u",
+        email="valid@example.com",
+        password=pw_64_unicode,
+    )
+    assert req.password == pw_64_unicode
+
+    # 7 chars rejected
+    with pytest.raises(ValidationError):
+        RegisterRequest(username="valid_u", email="v@example.com", password="é" * 5 + "a1")
+
+    # 65 chars rejected
+    with pytest.raises(ValidationError):
+        RegisterRequest(username="valid_u", email="v@example.com", password="é" * 63 + "a1")
+

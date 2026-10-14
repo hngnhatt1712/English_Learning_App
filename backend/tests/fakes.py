@@ -211,10 +211,19 @@ class FakeUserRepository:
     to reveal normalization bugs in the service layer.
     """
 
-    def __init__(self, users: list[FakeUser] | None = None, session: FakeSession | None = None) -> None:
+    def __init__(
+        self,
+        users: list[FakeUser] | None = None,
+        session: FakeSession | None = None,
+        *,
+        force_create_integrity_error: bool = False,
+        concurrent_user: Optional[FakeUser] = None,
+    ) -> None:
         self.users: list[FakeUser] = list(users or [])
         self._uncommitted: list[tuple[FakeUser, int]] = []
         self.session: FakeSession | None = session
+        self.force_create_integrity_error: bool = force_create_integrity_error
+        self.concurrent_user: Optional[FakeUser] = concurrent_user
         self.create_user_calls: list[dict] = []
         self.get_by_email_calls: list[str] = []
         self.get_by_username_calls: list[str] = []
@@ -245,6 +254,14 @@ class FakeUserRepository:
                 "selected_level_id": selected_level_id,
             }
         )
+        if self.concurrent_user is not None:
+            self.users.append(self.concurrent_user)
+        if self.force_create_integrity_error:
+            raise IntegrityError(
+                statement="INSERT INTO users ...",
+                params={},
+                orig=Exception("duplicate key value violates unique constraint"),
+            )
         user = FakeUser(
             username=username,
             email=email,

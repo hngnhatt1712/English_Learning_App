@@ -13,6 +13,7 @@ class UserRepository:
 
     def __init__(self, db: Session) -> None:
         self.db = db
+        self.session: Session = db
 
     def create_user(
         self,

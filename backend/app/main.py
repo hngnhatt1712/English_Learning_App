@@ -16,6 +16,8 @@ app = FastAPI(
 
 # Đăng ký global error handlers TRƯỚC mọi router (contract 10.2)
 register_handlers(app)
+from app.api import auth
+app.include_router(auth.router, prefix="/api/v1")
 
 
 @app.get("/")

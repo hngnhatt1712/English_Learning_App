@@ -111,7 +111,7 @@ def register(
 
     repository = repo if repo is not None else UserRepository(session)
     if hasattr(repository, "session") and getattr(repository, "session", None) is None:
-        repository.session = session
+        setattr(repository, "session", session)
 
     if repository.get_by_email(norm_email) is not None:
         raise AppError(
