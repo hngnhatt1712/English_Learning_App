@@ -35,7 +35,9 @@ google-services.json
 plan.md
 system_promt.md
 owla-design-system-skill.md
+api-contract.md
 task.md
+GEMINI.md
 # Python
 __pycache__/
 *.py[cod]
@@ -50,3 +52,9 @@ __pycache__/
 
 # Firebase
 service-account-key.json
+# Virtual Environment
+.venv/
+# Caches
+.pytest_cache/
+.ruff_cache/
+*.pyc

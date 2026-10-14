@@ -1,20 +1,29 @@
-"""Tạo / verify JWT access token bằng PyJWT (chưa gắn vào route nào)."""
+"""Tạo / verify JWT access token bằng PyJWT."""
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-import jwt as pyjwt 
-
+import jwt as pyjwt
 from app.core.config import settings
 
 ACCESS_TOKEN_TYPE = "access"
+JWT_ALGORITHM = "HS256"
 
 
-class TokenError(Exception):
+class TokenError(pyjwt.InvalidTokenError):
     """Token sai định dạng, sai chữ ký, hết hạn hoặc sai loại."""
 
 
+def _get_secret() -> str:
+    """Đọc JWT secret từ settings với lazy validation (D-08)."""
+    secret = getattr(settings, "JWT_SECRET_KEY", "")
+    if not secret or len(secret) < 32:
+        raise RuntimeError("JWT secret key must be at least 32 characters long")
+    return secret
+
+
 def create_access_token(
-    subject: str | int,
+    subject: str | int | uuid.UUID,
     expires_delta: timedelta | None = None,
     extra_claims: dict[str, Any] | None = None,
 ) -> str:
@@ -29,26 +38,23 @@ def create_access_token(
         "iat": now,
         "exp": expire,
     }
-    return pyjwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return pyjwt.encode(payload, _get_secret(), algorithm=JWT_ALGORITHM)
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
-    """Verify chữ ký + hạn dùng, trả về payload. Raise TokenError nếu không hợp lệ."""
-    try:
-        payload = pyjwt.decode(
-            token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
-            options={"require": ["sub", "exp", "iat"]},
-        )
-    except pyjwt.PyJWTError as exc:  # gồm ExpiredSignatureError, InvalidSignatureError, ...
-        raise TokenError(str(exc)) from exc
+    """Verify chữ ký + hạn dùng, trả về payload. Nổi pyjwt.InvalidTokenError nếu không hợp lệ."""
+    payload = pyjwt.decode(
+        token,
+        _get_secret(),
+        algorithms=[JWT_ALGORITHM],
+        options={"require": ["sub", "exp", "iat"]},
+    )
 
-    if payload.get("type") != ACCESS_TOKEN_TYPE:
+    if "type" in payload and payload["type"] != ACCESS_TOKEN_TYPE:
         raise TokenError("Sai loại token")
     return payload
 
 
 def get_subject(token: str) -> str:
     """Tiện ích: verify token và trả về `sub` (user id dạng string)."""
-    return decode_access_token(token)["sub"]
+    return decode_access_token(token)["sub"]
