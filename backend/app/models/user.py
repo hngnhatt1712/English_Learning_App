@@ -1,11 +1,10 @@
 """Model User đại diện cho người dùng của hệ thống."""
-from datetime import date, datetime
 import uuid
-
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Uuid, func, text
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import date, datetime
 
 from app.database.base import Base
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Uuid, func, text
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class User(Base):
@@ -17,6 +16,9 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_changed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
 
     selected_level_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True),
