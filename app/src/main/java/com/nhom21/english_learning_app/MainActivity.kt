@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nhom21.english_learning_app.features.auth.ForgotPasswordRoute
 import com.nhom21.english_learning_app.features.auth.SignUpRoute
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
 
@@ -22,7 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             English_Learning_AppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    SignUpRoute(
+                    ForgotPasswordRoute(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
