@@ -17,3 +17,9 @@ class LevelDto(CamelModel):
     max_stars: int = Field(ge=0)
     topics_completed: int = Field(ge=0)
     topics_total: int = Field(ge=0)
+
+
+class LevelListDto(CamelModel):
+    """Response data of GET /levels: {items: [LevelDto x3]} (contract 7.4)."""
+
+    items: list[LevelDto]

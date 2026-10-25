@@ -1,6 +1,7 @@
 package com.nhom21.english_learning_app
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,9 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nhom21.english_learning_app.features.auth.ForgotPasswordRoute
+import com.nhom21.english_learning_app.features.auth.LoginRoute
 import com.nhom21.english_learning_app.features.auth.SignUpRoute
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +29,12 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     ForgotPasswordRoute(
                         modifier = Modifier.padding(innerPadding)
+                    LoginRoute(
+                        modifier = Modifier.padding(innerPadding),
+                        onLoginSuccess = {
+                            // TODO(Task Navigation): replace with navigation to Home when NavHost is ready
+                            Toast.makeText(this@MainActivity, "Login successful", Toast.LENGTH_SHORT).show()
+                        }
                     )
                 }
             }
