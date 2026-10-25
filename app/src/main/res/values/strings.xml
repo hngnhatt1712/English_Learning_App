@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">English_Learning_App</string>
+    <!-- Login error strings per D-B5 / contract section 3.3 -->
+    <!-- 401 invalid-credentials: generic message, does not reveal which field is wrong (A1 / contract 4.4) -->
+    <string name="login_error_invalid_credentials">Tài khoản hoặc mật khẩu không đúng</string>
+    <!-- Client-side validation: identifier field -->
+    <string name="login_error_identifier_required">Vui lòng nhập email hoặc tên đăng nhập</string>
+    <string name="login_error_identifier_too_long">Email hoặc tên đăng nhập quá dài (tối đa 254 ký tự)</string>
+    <!-- Client-side validation: password field -->
+    <string name="login_error_password_required">Vui lòng nhập mật khẩu</string>
+    <!-- NETWORK synthetic error type -->
+    <string name="login_error_network">Không kết nối được máy chủ, vui lòng thử lại</string>
+    <!-- Fallback for UNKNOWN / server / unrecognised validation field errors -->
+    <string name="login_error_general">Đã xảy ra lỗi, vui lòng thử lại sau</string>
 </resources>

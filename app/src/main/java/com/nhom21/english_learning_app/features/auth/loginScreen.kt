@@ -70,9 +70,49 @@ import androidx.compose.ui.text.withStyle
 import com.nhom21.english_learning_app.ui.theme.Baloo2
 import com.nhom21.english_learning_app.ui.theme.Quicksand
 import com.nhom21.english_learning_app.core.ui.components.Owla3DButton
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
- * Màn hình đăng nhập Owla English ( UI tĩnh / Wireframe).
+ * Màn hình đăng nhập Owla English.
+ *
+ * Wired to [LoginViewModel] via Hilt (D-B1). Collects [LoginViewModel.events] in a
+ * [LaunchedEffect] and calls [onLoginSuccess] exactly once per login (D-B6).
+ * Layout, colors, fonts, and spacing are unchanged from the original wireframe.
+ */
+@Composable
+fun LoginRoute(
+    modifier: Modifier = Modifier,
+    viewModel: LoginViewModel = hiltViewModel(),
+    onLoginSuccess: () -> Unit = {},
+    onRegisterClick: () -> Unit = {}
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Collect one-shot events from the ViewModel (D-B6)
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is LoginEvent.LoginSuccess -> onLoginSuccess()
+            }
+        }
+    }
+
+    LoginScreen(
+        modifier = modifier,
+        uiState = uiState,
+        onIdentifierChange = viewModel::onIdentifierChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onTogglePasswordVisibility = viewModel::onTogglePasswordVisibility,
+        onLoginClick = viewModel::onLoginClick,
+        onRegisterClick = onRegisterClick
+    )
+}
+
+/**
+ * Stateless LoginScreen composable. Accepts all state and callbacks as parameters
+ * for testability and preview support. Do not call directly from production code;
+ * use [LoginRoute] instead.
  */
 @Composable
 fun LoginScreen(
@@ -167,6 +207,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // 3. Ô nhập Email hoặc Username (Corner radius Medium 20px - Mục 2.3)
+            // Wire-up: isError and supportingText connected to identifierError (D-B1)
             OutlinedTextField(
                 value = uiState.identifier,
                 onValueChange = onIdentifierChange,
@@ -180,6 +221,18 @@ fun LoginScreen(
                     )
                 },
                 singleLine = true,
+                isError = uiState.identifierError != null,
+                supportingText = if (uiState.identifierError != null) {
+                    {
+                        Text(
+                            text = uiState.identifierError,
+                            fontFamily = Quicksand,
+                            fontSize = 12.sp,
+                            color = OwlaColors.DangerBase
+                        )
+                    }
+                } else null,
+                enabled = !uiState.isLoading,
                 shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = surfaceColor,
@@ -200,6 +253,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // 4. Ô nhập Mật khẩu (Có nút xem/ẩn mật khẩu)
+            // Wire-up: isError and supportingText connected to passwordError (D-B1)
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = onPasswordChange,
@@ -213,6 +267,18 @@ fun LoginScreen(
                     )
                 },
                 singleLine = true,
+                isError = uiState.passwordError != null,
+                supportingText = if (uiState.passwordError != null) {
+                    {
+                        Text(
+                            text = uiState.passwordError,
+                            fontFamily = Quicksand,
+                            fontSize = 12.sp,
+                            color = OwlaColors.DangerBase
+                        )
+                    }
+                } else null,
+                enabled = !uiState.isLoading,
                 visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = onTogglePasswordVisibility) {
@@ -250,12 +316,14 @@ fun LoginScreen(
             )
 
             // 5. Hiển thị thông báo lỗi (Ẩn khi null - Dùng màu Danger Red - Mục 2.1 & 2.2)
+            // Wire-up: generalError (or legacy errorMessage) drives this AnimatedVisibility (D-B1)
+            val displayError = uiState.generalError ?: uiState.errorMessage
             AnimatedVisibility(
-                visible = uiState.errorMessage != null,
+                visible = displayError != null,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                if (uiState.errorMessage != null) {
+                if (displayError != null) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -263,7 +331,7 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = uiState.errorMessage,
+                            text = displayError,
                             color = OwlaColors.DangerBase,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
@@ -276,6 +344,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(28.dp))
 
             // 6. Nút Đăng nhập 3D Button (base/shadow, lún khi bấm theo mục 3 và 6)
+            // Wire-up: enabled connected to !isLoading to prevent double-tap (D-B4)
             Owla3DButton(
                 text = "ĐĂNG NHẬP",
                 onClick = {
@@ -283,6 +352,7 @@ fun LoginScreen(
                     onLoginClick()
                 },
                 isLoading = uiState.isLoading,
+                enabled = !uiState.isLoading,
                 baseColor = OwlaColors.PrimaryBase,
                 shadowColor = OwlaColors.PrimaryShadow
             )
