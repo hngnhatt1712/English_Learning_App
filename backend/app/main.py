@@ -18,6 +18,10 @@ app = FastAPI(
 register_handlers(app)
 from app.api import auth
 app.include_router(auth.router, prefix="/api/v1")
+from app.api import levels
+app.include_router(levels.router, prefix="/api/v1")
+from app.api import profile
+app.include_router(profile.router, prefix="/api/v1")
 
 
 @app.get("/")
