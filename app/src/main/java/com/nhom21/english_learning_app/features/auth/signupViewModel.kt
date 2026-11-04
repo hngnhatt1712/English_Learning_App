@@ -5,14 +5,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
+import com.nhom21.english_learning_app.core.network.ApiResult
+import com.nhom21.english_learning_app.data.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * ViewModel quản lý logic và trạng thái UI cho màn hình Đăng ký (SignUpScreen).
- * Các trường tên đăng nhập, email, mật khẩu đều được để trống mặc định.
+ * Tích hợp Hilt Injection và gọi AuthRepository xử lý đăng ký tài khoản.
  */
-class SignUpViewModel : ViewModel() {
+@HiltViewModel
+class SignUpViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+) : ViewModel() {
 
     var uiState by mutableStateOf(SignUpUiState())
         private set
@@ -47,6 +53,9 @@ class SignUpViewModel : ViewModel() {
 
     fun register(onSuccess: () -> Unit) {
         val state = uiState
+
+        if (state.isLoading) return
+
         if (state.username.isBlank() || state.email.isBlank() || state.password.isBlank() || state.confirmPassword.isBlank()) {
             uiState = state.copy(errorMessage = "Vui lòng điền đầy đủ tất cả các trường!")
             return
@@ -64,12 +73,27 @@ class SignUpViewModel : ViewModel() {
             return
         }
 
-        // Giả lập tiến trình đăng ký mượt mà với coroutine
         uiState = state.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            delay(1500) // Giả lập network delay 1.5s
-            uiState = uiState.copy(isLoading = false)
-            onSuccess()
+            val result = authRepository.register(
+                username = state.username.trim(),
+                email = state.email.trim(),
+                password = state.password
+            )
+
+            when (result) {
+                is ApiResult.Success -> {
+                    uiState = uiState.copy(isLoading = false)
+                    onSuccess()
+                }
+
+                is ApiResult.Failure -> {
+                    uiState = uiState.copy(
+                        isLoading = false,
+                        errorMessage = result.error.message.ifBlank { "Đăng ký thất bại. Vui lòng thử lại sau!" }
+                    )
+                }
+            }
         }
     }
 }
