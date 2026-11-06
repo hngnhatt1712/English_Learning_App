@@ -41,10 +41,6 @@ class SignUpViewModel : ViewModel() {
         uiState = uiState.copy(isConfirmPasswordVisible = !uiState.isConfirmPasswordVisible)
     }
 
-    fun onLevelSelect(level: String) {
-        uiState = uiState.copy(selectedLevel = level, errorMessage = null)
-    }
-
     fun onTermsCheckedChange(isChecked: Boolean) {
         uiState = uiState.copy(isTermsAccepted = isChecked, errorMessage = null)
     }
