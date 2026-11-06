@@ -18,11 +18,17 @@ import com.nhom21.english_learning_app.features.auth.LoginRoute
 import com.nhom21.english_learning_app.features.auth.SelectLevelRoute
 import com.nhom21.english_learning_app.features.auth.SignUpRoute
 import com.nhom21.english_learning_app.features.auth.WelcomeSuccessScreen
+import com.nhom21.english_learning_app.features.home.HomeRoute
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
-private enum class AuthScreen { SignUp, SelectLevel, WelcomeSuccess, Login }
+private enum class AppScreen { SignUp, SelectLevel, WelcomeSuccess, Login, Home }
 
+/**
+ * Activity chính của ứng dụng Owla English.
+ * Đóng vai trò làm Router điều hướng giữa các luồng Đăng ký, Chọn trình độ, Đăng nhập, và Home.
+ * Toàn bộ phần xử lý logic nghiệp vụ và state của từng màn hình đều được đưa vào ViewModel tương ứng.
+ */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +38,7 @@ class MainActivity : ComponentActivity() {
             English_Learning_AppTheme {
                 OwlaApp(
                     onLoginSuccess = {
-                        Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -42,30 +48,39 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun OwlaApp(
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
 ) {
-    var currentScreen by remember { mutableStateOf(AuthScreen.SignUp) }
+    var currentScreen by remember { mutableStateOf(AppScreen.SignUp) }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         val modifier = Modifier.padding(innerPadding)
         when (currentScreen) {
-            AuthScreen.SignUp -> SignUpRoute(
+            AppScreen.SignUp -> SignUpRoute(
                 modifier = modifier,
                 onSignupSuccess = { currentScreen = AuthScreen.SelectLevel },
                 onNavigateToLogin = { currentScreen = AuthScreen.Login }
             )
-            AuthScreen.SelectLevel -> SelectLevelRoute(
+            AppScreen.SelectLevel -> SelectLevelRoute(
                 modifier = modifier,
-                onNavigateNext = { _ -> currentScreen = AuthScreen.WelcomeSuccess }
+                onNavigateNext = { _ -> currentScreen = AppScreen.WelcomeSuccess }
             )
-            AuthScreen.WelcomeSuccess -> WelcomeSuccessScreen(
+            AppScreen.WelcomeSuccess -> WelcomeSuccessScreen(
                 modifier = modifier,
-                onContinueToLogin = { currentScreen = AuthScreen.Login }
+                onContinueToLogin = { currentScreen = AppScreen.Login }
             )
-            AuthScreen.Login -> LoginRoute(
+            AppScreen.Login -> LoginRoute(
                 modifier = modifier,
-                onLoginSuccess = onLoginSuccess,
-                onRegisterClick = { currentScreen = AuthScreen.SignUp }
+                onLoginSuccess = {
+                    onLoginSuccess()
+                    currentScreen = AppScreen.Home
+                },
+                onRegisterClick = { currentScreen = AppScreen.SignUp }
+            )
+            AppScreen.Home -> HomeRoute(
+                modifier = modifier,
+                onNavigateToLesson = { /* Chuyển tab Lesson khi phát triển thêm */ },
+                onNavigateToPractice = { /* Chuyển tab Practice khi phát triển thêm */ },
+                onNavigateToProfile = { /* Chuyển tab Profile khi phát triển thêm */ }
             )
         }
     }

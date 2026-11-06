@@ -12,7 +12,7 @@ data class SelectLevelOption(
  * UI State cho màn hình Chọn trình độ tiếng Anh (SelectLevelScreen).
  */
 data class SelectLevelUiState(
-    val selectedLevel: String = "A2", // Mặc định chọn A2 như trong thiết kế mẫu
+    val selectedLevel: String = "", // Mặc định chọn A2 như trong thiết kế mẫu
     val levels: List<SelectLevelOption> = listOf(
         SelectLevelOption("A1", "I just started learning English"),
         SelectLevelOption("A2", "I know some words and phrases"),
