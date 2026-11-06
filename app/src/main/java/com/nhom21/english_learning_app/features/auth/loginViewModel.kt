@@ -97,9 +97,11 @@ class LoginViewModel @Inject constructor(
             identifierErr = ERROR_IDENTIFIER_TOO_LONG
         }
 
-        // Contract 4.4 / backend auth.py: password min_length=1 at login (no strength rules at login)
+        // Contract 4.4 / backend auth.py: password min_length=1, max_length=64 at login (no strength rules at login)
         if (current.password.isEmpty()) {
             passwordErr = ERROR_PASSWORD_REQUIRED
+        } else if (current.password.length > MAX_PASSWORD_LENGTH) {
+            passwordErr = ERROR_PASSWORD_TOO_LONG
         }
 
         if (identifierErr != null || passwordErr != null) {
@@ -221,10 +223,14 @@ class LoginViewModel @Inject constructor(
         /** Contract 7.2: identifier max length from backend auth.py LoginRequest max_length=254 */
         const val MAX_IDENTIFIER_LENGTH = 254
 
+        /** Contract 7.2: password max length from backend auth.py LoginRequest max_length=64 */
+        const val MAX_PASSWORD_LENGTH = 64
+
         // Display strings — must match strings.xml values (D-B5, D-B7, UI is Vietnamese per E4-e)
         const val ERROR_IDENTIFIER_REQUIRED = "Vui lòng nhập email hoặc tên đăng nhập"
         const val ERROR_IDENTIFIER_TOO_LONG = "Email hoặc tên đăng nhập quá dài (tối đa 254 ký tự)"
         const val ERROR_PASSWORD_REQUIRED = "Vui lòng nhập mật khẩu"
+        const val ERROR_PASSWORD_TOO_LONG = "Mật khẩu quá dài"
 
         /** Contract 3.3 row 401 invalid-credentials: "Hiện 'Tài khoản hoặc mật khẩu không đúng'" */
         const val ERROR_INVALID_CREDENTIALS = "Tài khoản hoặc mật khẩu không đúng"

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import com.nhom21.english_learning_app.features.auth.LoginRoute
 import com.nhom21.english_learning_app.features.auth.SelectLevelRoute
 import com.nhom21.english_learning_app.features.auth.SignUpRoute
+import com.nhom21.english_learning_app.features.auth.SignupRoute
 import com.nhom21.english_learning_app.features.auth.WelcomeSuccessScreen
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,6 +31,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             English_Learning_AppTheme {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    SignupRoute(
+                        modifier = Modifier.padding(innerPadding),
+                        onSignupSuccess = {
+                            // TODO(Task Navigation): replace with navigation
+                            Toast.makeText(this@MainActivity, "Signup successful", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
                 OwlaApp(
                     onLoginSuccess = {
                         Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
