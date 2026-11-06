@@ -101,16 +101,6 @@ class SignupViewModel @Inject constructor(
         _uiState.update { it.copy(isConfirmPasswordVisible = !it.isConfirmPasswordVisible) }
     }
 
-    fun onLevelSelect(level: String) {
-        _uiState.update {
-            it.copy(
-                selectedLevel = level,
-                generalError = null,
-                errorMessage = null
-            )
-        }
-    }
-
     fun onTermsCheckedChange(isChecked: Boolean) {
         _uiState.update {
             it.copy(
