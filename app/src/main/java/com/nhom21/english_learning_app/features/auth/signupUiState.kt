@@ -4,7 +4,7 @@ package com.nhom21.english_learning_app.features.auth
  * Immutable UI state for the Signup screen (D-C12).
  *
  * Preserves all existing fields (`username`, `email`, `password`, `confirmPassword`,
- * `isPasswordVisible`, `isConfirmPasswordVisible`, `selectedLevel`, `isTermsAccepted`,
+ * `isPasswordVisible`, `isConfirmPasswordVisible`, `isTermsAccepted`,
  * `isLoading`, `errorMessage`) and adds field-level and general error fields (`usernameError`,
  * `emailError`, `passwordError`, `confirmPasswordError`, `generalError`).
  * `generalError` and legacy `errorMessage` are kept synchronised by [SignupViewModel] so existing
@@ -17,7 +17,6 @@ data class SignUpUiState(
     val confirmPassword: String = "",
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
-    val selectedLevel: String = "",
     val isTermsAccepted: Boolean = false,
     val isLoading: Boolean = false,
     val usernameError: String? = null,
