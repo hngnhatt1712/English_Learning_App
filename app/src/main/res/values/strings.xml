@@ -8,8 +8,22 @@
     <string name="login_error_identifier_too_long">Email hoặc tên đăng nhập quá dài (tối đa 254 ký tự)</string>
     <!-- Client-side validation: password field -->
     <string name="login_error_password_required">Vui lòng nhập mật khẩu</string>
+    <string name="login_error_password_too_long">Mật khẩu quá dài</string>
     <!-- NETWORK synthetic error type -->
     <string name="login_error_network">Không kết nối được máy chủ, vui lòng thử lại</string>
     <!-- Fallback for UNKNOWN / server / unrecognised validation field errors -->
     <string name="login_error_general">Đã xảy ra lỗi, vui lòng thử lại sau</string>
+
+    <!-- Signup error strings per D-C6 / contract section 3.3 & 7.2 -->
+    <string name="signup_error_username_required">Vui lòng nhập tên đăng nhập</string>
+    <string name="signup_error_username_invalid">Tên đăng nhập gồm 3–30 ký tự: chữ cái, số, dấu chấm hoặc gạch dưới</string>
+    <string name="signup_error_username_taken">Tên đăng nhập đã được sử dụng</string>
+    <string name="signup_error_email_required">Vui lòng nhập email</string>
+    <string name="signup_error_email_invalid">Email không hợp lệ</string>
+    <string name="signup_error_email_taken">Email đã được đăng ký</string>
+    <string name="signup_error_password_required">Vui lòng nhập mật khẩu</string>
+    <string name="signup_error_password_length">Mật khẩu phải từ 8 đến 64 ký tự</string>
+    <string name="signup_error_password_complexity">Mật khẩu cần có ít nhất một chữ cái và một chữ số</string>
+    <string name="signup_error_confirm_required">Vui lòng nhập lại mật khẩu</string>
+    <string name="signup_error_confirm_mismatch">Mật khẩu nhập lại không khớp</string>
 </resources>

@@ -67,7 +67,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.core.ui.components.Owla3DButton
 import com.nhom21.english_learning_app.ui.theme.Baloo2
@@ -190,6 +191,18 @@ fun SignUpScreen(
                     )
                 },
                 singleLine = true,
+                isError = uiState.usernameError != null,
+                supportingText = if (uiState.usernameError != null) {
+                    {
+                        Text(
+                            text = uiState.usernameError,
+                            fontFamily = Quicksand,
+                            fontSize = 12.sp,
+                            color = OwlaColors.DangerBase
+                        )
+                    }
+                } else null,
+                enabled = !uiState.isLoading,
                 shape = RoundedCornerShape(20.dp),
                 colors = textFieldColors(surfaceColor, borderColor, textPrimary),
                 keyboardOptions = KeyboardOptions(
@@ -221,6 +234,18 @@ fun SignUpScreen(
                     )
                 },
                 singleLine = true,
+                isError = uiState.emailError != null,
+                supportingText = if (uiState.emailError != null) {
+                    {
+                        Text(
+                            text = uiState.emailError,
+                            fontFamily = Quicksand,
+                            fontSize = 12.sp,
+                            color = OwlaColors.DangerBase
+                        )
+                    }
+                } else null,
+                enabled = !uiState.isLoading,
                 shape = RoundedCornerShape(20.dp),
                 colors = textFieldColors(surfaceColor, borderColor, textPrimary),
                 keyboardOptions = KeyboardOptions(
@@ -264,6 +289,18 @@ fun SignUpScreen(
                     }
                 },
                 singleLine = true,
+                isError = uiState.passwordError != null,
+                supportingText = if (uiState.passwordError != null) {
+                    {
+                        Text(
+                            text = uiState.passwordError,
+                            fontFamily = Quicksand,
+                            fontSize = 12.sp,
+                            color = OwlaColors.DangerBase
+                        )
+                    }
+                } else null,
+                enabled = !uiState.isLoading,
                 visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(20.dp),
                 colors = textFieldColors(surfaceColor, borderColor, textPrimary),
@@ -308,6 +345,18 @@ fun SignUpScreen(
                     }
                 },
                 singleLine = true,
+                isError = uiState.confirmPasswordError != null,
+                supportingText = if (uiState.confirmPasswordError != null) {
+                    {
+                        Text(
+                            text = uiState.confirmPasswordError,
+                            fontFamily = Quicksand,
+                            fontSize = 12.sp,
+                            color = OwlaColors.DangerBase
+                        )
+                    }
+                } else null,
+                enabled = !uiState.isLoading,
                 visualTransformation = if (uiState.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(20.dp),
                 colors = textFieldColors(surfaceColor, borderColor, textPrimary),
@@ -451,14 +500,15 @@ fun SignUpScreen(
             }
 
             // 9. Thông báo lỗi
+            val displayError = uiState.generalError ?: uiState.errorMessage
             AnimatedVisibility(
-                visible = uiState.errorMessage != null,
+                visible = displayError != null,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                if (uiState.errorMessage != null) {
+                if (displayError != null) {
                     Text(
-                        text = uiState.errorMessage,
+                        text = displayError,
                         color = OwlaColors.DangerBase,
                         fontSize = 13.sp,
                         fontFamily = Quicksand,
@@ -479,6 +529,7 @@ fun SignUpScreen(
                     onRegisterClick()
                 },
                 isLoading = uiState.isLoading,
+                enabled = !uiState.isLoading,
                 baseColor = OwlaColors.PrimaryBase,
                 shadowColor = OwlaColors.PrimaryShadow
             )
@@ -600,18 +651,31 @@ fun SignUpScreenDarkModePreview() {
 }
 
 /**
- * Stateful wrapper for SignUpScreen that manages its state via SignUpViewModel.
- * Keeps MainActivity clean and decoupled from feature logic.
+ * Stateful wrapper for [SignUpScreen] wired to [SignupViewModel] via Hilt (D-C8).
+ * Collects [SignupViewModel.uiState] with [collectAsStateWithLifecycle] and one-shot
+ * [SignupViewModel.events] in a [LaunchedEffect].
  */
 @Composable
-fun SignUpRoute(
+fun SignupRoute(
     modifier: Modifier = Modifier,
-    viewModel: SignUpViewModel = viewModel(),
+    viewModel: SignupViewModel = hiltViewModel(),
+    onSignupSuccess: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is SignupEvent.SignupSuccess -> onSignupSuccess()
+                is SignupEvent.ShowMessage -> Unit
+            }
+        }
+    }
+
     SignUpScreen(
         modifier = modifier,
-        uiState = viewModel.uiState,
+        uiState = uiState,
         onUsernameChange = viewModel::onUsernameChange,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
@@ -620,7 +684,23 @@ fun SignUpRoute(
         onToggleConfirmPasswordVisibility = viewModel::onToggleConfirmPasswordVisibility,
         onLevelSelect = viewModel::onLevelSelect,
         onTermsCheckedChange = viewModel::onTermsCheckedChange,
-        onRegisterClick = { viewModel.register {} },
+        onRegisterClick = viewModel::onSignupClick,
         onLoginClick = onNavigateToLogin
+    )
+}
+
+/** Compatibility wrapper forwarding to [SignupRoute]. */
+@Composable
+fun SignUpRoute(
+    modifier: Modifier = Modifier,
+    viewModel: SignUpViewModel = hiltViewModel(),
+    onSignupSuccess: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}
+) {
+    SignupRoute(
+        modifier = modifier,
+        viewModel = viewModel,
+        onSignupSuccess = onSignupSuccess,
+        onNavigateToLogin = onNavigateToLogin
     )
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nhom21.english_learning_app.features.auth.LoginRoute
 import com.nhom21.english_learning_app.features.auth.SignUpRoute
+import com.nhom21.english_learning_app.features.auth.SignupRoute
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,11 +27,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             English_Learning_AppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginRoute(
+                    SignupRoute(
                         modifier = Modifier.padding(innerPadding),
-                        onLoginSuccess = {
-                            // TODO(Task Navigation): replace with navigation to Home when NavHost is ready
-                            Toast.makeText(this@MainActivity, "Login successful", Toast.LENGTH_SHORT).show()
+                        onSignupSuccess = {
+                            // TODO(Task Navigation): replace with navigation
+                            Toast.makeText(this@MainActivity, "Signup successful", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }

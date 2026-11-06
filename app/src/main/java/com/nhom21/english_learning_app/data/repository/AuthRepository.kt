@@ -18,9 +18,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Authentication repository interface per decisions D-A11 to D-A13.
+ * Authentication repository interface per decisions D-A11 to D-A13 and D-C1.
  */
 interface AuthRepository {
+    /**
+     * Registers a new user account and persists the returned access token on success (D-C1).
+     */
     suspend fun register(username: String, email: String, password: String): ApiResult<AuthResultDto>
     suspend fun login(identifier: String, password: String): ApiResult<AuthResultDto>
     suspend fun me(): ApiResult<UserDto>
@@ -42,6 +45,8 @@ class AuthRepositoryImpl @Inject constructor(
             val response = authApi.register(RegisterRequest(username = username, email = email, password = password))
             val data = response.data
             if (response.status && data != null) {
+                // Decision D-C1: Persist token on register success before returning (signup = auto-login)
+                tokenManager.saveToken(data.accessToken)
                 ApiResult.Success(data)
             } else {
                 ApiResult.Failure(
