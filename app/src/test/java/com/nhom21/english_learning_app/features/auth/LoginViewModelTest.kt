@@ -216,9 +216,62 @@ class LoginViewModelTest {
 
         assertEquals("Exactly one LoginSuccess event expected", 1, events.size)
         assertTrue(events[0] is LoginEvent.LoginSuccess)
+        assertEquals(LoginEvent.LoginSuccess(selectedLevelId = null), events[0])
         assertNull("No identifierError after success", viewModel.uiState.value.identifierError)
         assertNull("No passwordError after success", viewModel.uiState.value.passwordError)
         assertNull("No generalError after success", viewModel.uiState.value.generalError)
+    }
+
+    @Test
+    fun `login success with null selectedLevelId emits LoginSuccess with null`() = runTest {
+        fakeRepository.loginResult = sampleSuccessResult
+        viewModel.onIdentifierChange("user@test.com")
+        viewModel.onPasswordChange("Secret1")
+
+        val events = mutableListOf<LoginEvent>()
+        val job = launch { viewModel.events.collect { events.add(it) } }
+
+        viewModel.onLoginClick()
+        advanceUntilIdle()
+        job.cancel()
+
+        assertEquals(1, events.size)
+        val loginSuccess = events[0] as LoginEvent.LoginSuccess
+        assertNull("selectedLevelId must be null when user has not chosen a level", loginSuccess.selectedLevelId)
+    }
+
+    @Test
+    fun `login success with non-null selectedLevelId emits LoginSuccess carrying exact selectedLevelId`() = runTest {
+        val expectedLevelId = "11111111-1111-1111-1111-111111111101"
+        fakeRepository.loginResult = ApiResult.Success(
+            AuthResultDto(
+                accessToken = "eyJ.test.token",
+                tokenType = "Bearer",
+                expiresIn = 604800L,
+                user = UserDto(
+                    id = "11111111-1111-1111-1111-111111111111",
+                    username = "test_user",
+                    email = "test@example.com",
+                    selectedLevelId = expectedLevelId,
+                    currentStreak = 3,
+                    lastLearningDate = "2026-10-04",
+                    createdAt = "2026-10-01T00:00:00Z"
+                )
+            )
+        )
+        viewModel.onIdentifierChange("user@test.com")
+        viewModel.onPasswordChange("Secret1")
+
+        val events = mutableListOf<LoginEvent>()
+        val job = launch { viewModel.events.collect { events.add(it) } }
+
+        viewModel.onLoginClick()
+        advanceUntilIdle()
+        job.cancel()
+
+        assertEquals(1, events.size)
+        val loginSuccess = events[0] as LoginEvent.LoginSuccess
+        assertEquals("LoginSuccess must carry the exact selectedLevelId from UserDto", expectedLevelId, loginSuccess.selectedLevelId)
     }
 
     // ── G: INVALID_CREDENTIALS (contract 3.3 row 401) ───────────────────────

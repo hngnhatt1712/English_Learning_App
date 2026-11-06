@@ -5,11 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.nhom21.english_learning_app.core.network.ApiErrorType
 import com.nhom21.english_learning_app.core.network.ApiResult
 import com.nhom21.english_learning_app.data.repository.AuthRepository
-import com.nhom21.english_learning_app.core.network.ApiResult
-import com.nhom21.english_learning_app.data.repository.AuthRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
-import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
