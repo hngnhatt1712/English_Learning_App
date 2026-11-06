@@ -88,6 +88,10 @@ object NetworkModule {
     @Singleton
     fun provideHomeApi(retrofit: Retrofit): HomeApi {
         return retrofit.create(HomeApi::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideLevelApi(retrofit: Retrofit): LevelApi {
         return retrofit.create(LevelApi::class.java)
     }

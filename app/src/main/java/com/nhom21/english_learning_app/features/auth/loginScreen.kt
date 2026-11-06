@@ -84,7 +84,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun LoginRoute(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit = {},
+    onLoginSuccess: (String?) -> Unit = {},
     onRegisterClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -93,7 +93,7 @@ fun LoginRoute(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is LoginEvent.LoginSuccess -> onLoginSuccess()
+                is LoginEvent.LoginSuccess -> onLoginSuccess(event.selectedLevelId)
             }
         }
     }

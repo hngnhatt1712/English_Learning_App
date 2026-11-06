@@ -40,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.core.ui.components.Owla3DButton
 import com.nhom21.english_learning_app.ui.theme.Baloo2
@@ -280,7 +280,7 @@ fun SelectLevelScreenDarkModePreview() {
 @Composable
 fun SelectLevelRoute(
     modifier: Modifier = Modifier,
-    viewModel: SelectLevelViewModel = viewModel(),
+    viewModel: SelectLevelViewModel = hiltViewModel(),
     onNavigateNext: (String) -> Unit = {}
 ) {
     SelectLevelScreen(

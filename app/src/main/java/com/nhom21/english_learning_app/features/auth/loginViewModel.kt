@@ -17,8 +17,13 @@ import javax.inject.Inject
 
 /** Events emitted once by [LoginViewModel] to the UI layer. */
 sealed interface LoginEvent {
-    /** Signals a successful login. Navigation is handled by the receiver. */
-    data object LoginSuccess : LoginEvent
+    /**
+     * Signals a successful login with the user's [selectedLevelId] from the server response.
+     * Navigation is handled by the receiver.
+     */
+    data class LoginSuccess(
+        val selectedLevelId: String?
+    ) : LoginEvent
 }
 
 /**
@@ -138,7 +143,9 @@ class LoginViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     // D-B10: token already saved by AuthRepositoryImpl; do not call me()
                     _uiState.update { it.copy(isLoading = false) }
-                    _eventChannel.send(LoginEvent.LoginSuccess)
+                    _eventChannel.send(
+                        LoginEvent.LoginSuccess(selectedLevelId = result.data.user.selectedLevelId)
+                    )
                 }
 
                 is ApiResult.Failure -> {

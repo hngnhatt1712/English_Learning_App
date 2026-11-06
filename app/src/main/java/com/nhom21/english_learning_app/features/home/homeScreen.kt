@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -39,7 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.core.ui.components.Owla3DButton
 import com.nhom21.english_learning_app.ui.theme.Baloo2
@@ -199,11 +201,11 @@ private fun HomeHeader(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_streak),
                     contentDescription = "Streak Flame Icon",
-                    tint = OwlaColors.AccentBase,
+                    tint = Color.Unspecified,
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = "$currentStreak ngày",
+                    text = "$currentStreak",
                     fontFamily = Baloo2,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -538,11 +540,12 @@ private fun OwlaBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             BottomNavItem(
+                modifier = Modifier.weight(1f),
                 iconRes = R.drawable.ic_home,
                 label = "Home",
                 isSelected = selectedTab == HomeTab.HOME,
@@ -550,6 +553,7 @@ private fun OwlaBottomBar(
             )
 
             BottomNavItem(
+                modifier = Modifier.weight(1f),
                 iconRes = R.drawable.ic_lesson,
                 label = "Lesson",
                 isSelected = selectedTab == HomeTab.LESSON,
@@ -557,6 +561,7 @@ private fun OwlaBottomBar(
             )
 
             BottomNavItem(
+                modifier = Modifier.weight(1f),
                 iconRes = R.drawable.ic_practice,
                 label = "Practice",
                 isSelected = selectedTab == HomeTab.PRACTICE,
@@ -565,6 +570,7 @@ private fun OwlaBottomBar(
             )
 
             BottomNavItem(
+                modifier = Modifier.weight(1f),
                 iconRes = R.drawable.ic_profile,
                 label = "Profile",
                 isSelected = selectedTab == HomeTab.PROFILE,
@@ -582,6 +588,7 @@ private fun BottomNavItem(
     iconRes: Int,
     label: String,
     isSelected: Boolean,
+    modifier: Modifier = Modifier,
     hasBadge: Boolean = false,
     onClick: () -> Unit
 ) {
@@ -589,10 +596,10 @@ private fun BottomNavItem(
     val inactiveColor = Color(0xFF7B8B9A)
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -600,8 +607,10 @@ private fun BottomNavItem(
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = label,
-                tint = if (isSelected) activeColor else inactiveColor,
-                modifier = Modifier.size(26.dp)
+                tint = Color.Unspecified,
+                modifier = Modifier
+                    .size(26.dp)
+                    .alpha(if (isSelected) 1f else 0.55f)
             )
 
             if (hasBadge) {
@@ -651,7 +660,7 @@ fun HomeScreenDarkModePreview() {
 @Composable
 fun HomeRoute(
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = viewModel(),
+    viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToLesson: () -> Unit = {},
     onNavigateToPractice: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {}
