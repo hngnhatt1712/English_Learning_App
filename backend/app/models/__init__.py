@@ -1,6 +1,8 @@
 from app.models.device_token import DeviceToken
+from app.models.lesson import Lesson
 from app.models.level import Level
+from app.models.progress import UserTopicProgress
+from app.models.topic import Topic
 from app.models.user import User
 
-__all__ = ["DeviceToken", "Level", "User"]
-
+__all__ = ["DeviceToken", "Lesson", "Level", "Topic", "User", "UserTopicProgress"]

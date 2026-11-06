@@ -57,8 +57,8 @@ private fun OwlaApp(
         when (currentScreen) {
             AppScreen.SignUp -> SignUpRoute(
                 modifier = modifier,
-                onSignUpSuccess = { currentScreen = AppScreen.SelectLevel },
-                onNavigateToLogin = { currentScreen = AppScreen.Login }
+                onSignupSuccess = { currentScreen = AuthScreen.SelectLevel },
+                onNavigateToLogin = { currentScreen = AuthScreen.Login }
             )
             AppScreen.SelectLevel -> SelectLevelRoute(
                 modifier = modifier,
