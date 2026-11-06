@@ -8,15 +8,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nhom21.english_learning_app.features.auth.LoginRoute
+import com.nhom21.english_learning_app.features.auth.SelectLevelRoute
 import com.nhom21.english_learning_app.features.auth.SignUpRoute
+import com.nhom21.english_learning_app.features.auth.WelcomeSuccessScreen
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
 import dagger.hilt.android.AndroidEntryPoint
+
+private enum class AuthScreen { SignUp, SelectLevel, WelcomeSuccess, Login }
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -25,32 +30,43 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             English_Learning_AppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginRoute(
-                        modifier = Modifier.padding(innerPadding),
-                        onLoginSuccess = {
-                            // TODO(Task Navigation): replace with navigation to Home when NavHost is ready
-                            Toast.makeText(this@MainActivity, "Login successful", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                }
+                OwlaApp(
+                    onLoginSuccess = {
+                        Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+private fun OwlaApp(
+    onLoginSuccess: () -> Unit
+) {
+    var currentScreen by remember { mutableStateOf(AuthScreen.SignUp) }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    English_Learning_AppTheme {
-        Greeting("Android")
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        val modifier = Modifier.padding(innerPadding)
+        when (currentScreen) {
+            AuthScreen.SignUp -> SignUpRoute(
+                modifier = modifier,
+                onSignUpSuccess = { currentScreen = AuthScreen.SelectLevel },
+                onNavigateToLogin = { currentScreen = AuthScreen.Login }
+            )
+            AuthScreen.SelectLevel -> SelectLevelRoute(
+                modifier = modifier,
+                onNavigateNext = { _ -> currentScreen = AuthScreen.WelcomeSuccess }
+            )
+            AuthScreen.WelcomeSuccess -> WelcomeSuccessScreen(
+                modifier = modifier,
+                onContinueToLogin = { currentScreen = AuthScreen.Login }
+            )
+            AuthScreen.Login -> LoginRoute(
+                modifier = modifier,
+                onLoginSuccess = onLoginSuccess,
+                onRegisterClick = { currentScreen = AuthScreen.SignUp }
+            )
+        }
     }
 }

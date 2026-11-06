@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,9 +28,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Checkbox
@@ -89,7 +85,6 @@ fun SignUpScreen(
     onConfirmPasswordChange: (String) -> Unit = {},
     onTogglePasswordVisibility: () -> Unit = {},
     onToggleConfirmPasswordVisibility: () -> Unit = {},
-    onLevelSelect: (String) -> Unit = {},
     onTermsCheckedChange: (Boolean) -> Unit = {},
     onRegisterClick: () -> Unit = {},
     onLoginClick: () -> Unit = {}
@@ -322,102 +317,7 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 7. Phần chọn Trình độ hiện tại (Card + Level Buttons A1, A2, B1)
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                color = surfaceColor,
-                border = BorderStroke(1.dp, borderColor)
-            ) {
-                Column(
-                    modifier = Modifier.padding(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                modifier = Modifier.size(36.dp),
-                                shape = RoundedCornerShape(10.dp),
-                                color = OwlaColors.PrimaryBase.copy(alpha = 0.15f)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.BarChart,
-                                        contentDescription = "Trình độ",
-                                        tint = OwlaColors.PrimaryBase,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Trình độ hiện tại",
-                                    fontFamily = Baloo2,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = textPrimary
-                                )
-                                Text(
-                                    text = "Chọn trình độ tiếng Anh của bạn",
-                                    fontFamily = Quicksand,
-                                    fontSize = 12.sp,
-                                    color = textSecondary
-                                )
-                            }
-                        }
-
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Dropdown",
-                            tint = textSecondary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Các nút chọn mức độ A1, A2, B1
-                    val levels = listOf("A1", "A2", "B1")
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        levels.forEach { level ->
-                            val isSelected = uiState.selectedLevel == level
-                            val btnBg = if (isSelected) OwlaColors.AccentBase else backgroundColor
-                            val txtColor = if (isSelected) Color.White else textPrimary
-                            val btnBorder = if (isSelected) null else BorderStroke(1.dp, borderColor)
-
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(42.dp)
-                                    .clickable { onLevelSelect(level) },
-                                shape = RoundedCornerShape(14.dp),
-                                color = btnBg,
-                                border = btnBorder
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = level,
-                                        fontFamily = Baloo2,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp,
-                                        color = txtColor
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 8. Checkbox Đồng ý điều khoản
+            // 7. Checkbox Đồng ý điều khoản
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -543,7 +443,6 @@ fun SignUpScreenEmptyPreview() {
         onConfirmPasswordChange = { state = state.copy(confirmPassword = it) },
         onTogglePasswordVisibility = { state = state.copy(isPasswordVisible = !state.isPasswordVisible) },
         onToggleConfirmPasswordVisibility = { state = state.copy(isConfirmPasswordVisible = !state.isConfirmPasswordVisible) },
-        onLevelSelect = { state = state.copy(selectedLevel = it) },
         onTermsCheckedChange = { state = state.copy(isTermsAccepted = it) }
     )
 }
@@ -557,7 +456,6 @@ fun SignUpScreenErrorPreview() {
             email = "nguyenvana@owla.edu",
             password = "123",
             confirmPassword = "1234",
-            selectedLevel = "A2",
             isTermsAccepted = true,
             errorMessage = "Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại!"
         )
@@ -573,7 +471,6 @@ fun SignUpScreenLoadingPreview() {
             email = "tranthib@owla.edu",
             password = "securepassword",
             confirmPassword = "securepassword",
-            selectedLevel = "B1",
             isTermsAccepted = true,
             isLoading = true
         )
@@ -592,7 +489,6 @@ fun SignUpScreenDarkModePreview() {
             uiState = SignUpUiState(
                 username = "Night Owl",
                 email = "nightowl@owla.edu",
-                selectedLevel = "A1",
                 isTermsAccepted = true
             )
         )
@@ -607,7 +503,8 @@ fun SignUpScreenDarkModePreview() {
 fun SignUpRoute(
     modifier: Modifier = Modifier,
     viewModel: SignUpViewModel = viewModel(),
-    onNavigateToLogin: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {},
+    onSignUpSuccess: () -> Unit = {}
 ) {
     SignUpScreen(
         modifier = modifier,
@@ -618,9 +515,8 @@ fun SignUpRoute(
         onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
         onTogglePasswordVisibility = viewModel::onTogglePasswordVisibility,
         onToggleConfirmPasswordVisibility = viewModel::onToggleConfirmPasswordVisibility,
-        onLevelSelect = viewModel::onLevelSelect,
         onTermsCheckedChange = viewModel::onTermsCheckedChange,
-        onRegisterClick = { viewModel.register {} },
+        onRegisterClick = { viewModel.register(onSuccess = onSignUpSuccess) },
         onLoginClick = onNavigateToLogin
     )
 }
