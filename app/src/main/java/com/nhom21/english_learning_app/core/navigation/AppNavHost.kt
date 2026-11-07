@@ -12,11 +12,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.nhom21.english_learning_app.core.network.SessionEvents
+import com.nhom21.english_learning_app.features.auth.ForgotPasswordRoute
 import com.nhom21.english_learning_app.features.auth.LoginRoute
 import com.nhom21.english_learning_app.features.auth.SelectLevelRoute
 import com.nhom21.english_learning_app.features.auth.SignupRoute
 import com.nhom21.english_learning_app.features.auth.WelcomeSuccessScreen
 import com.nhom21.english_learning_app.features.home.HomeRoute
+import com.nhom21.english_learning_app.features.profile.ProfileRoute
 
 /**
  * Root Navigation Host for the application (Sprint 3).
@@ -119,7 +121,43 @@ fun AppNavHost(
         }
 
         composable<Home> {
-            HomeRoute()
+            HomeRoute(
+                onNavigateToProfile = {
+                    navController.navigate(Profile) {
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable<Profile> {
+            ProfileRoute(
+                onNavigateToHome = {
+                    navController.navigate(Home) {
+                        popUpTo(Home) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate(ForgotPassword) {
+                        launchSingleTop = true
+                    }
+                },
+                onLoggedOut = {
+                    navController.navigate(Login) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable<ForgotPassword> {
+            ForgotPasswordRoute(
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

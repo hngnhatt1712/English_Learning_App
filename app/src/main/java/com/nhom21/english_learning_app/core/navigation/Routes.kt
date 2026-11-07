@@ -21,6 +21,12 @@ data object WelcomeSuccess
 @Serializable
 data object Home
 
+@Serializable
+data object Profile
+
+@Serializable
+data object ForgotPassword
+
 /**
  * Post-authentication destination decision result for the Login flow.
  * Decoupled from Android/Navigation classes so it can be unit-tested on the JVM.
