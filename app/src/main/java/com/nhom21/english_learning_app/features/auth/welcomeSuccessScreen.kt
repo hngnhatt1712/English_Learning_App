@@ -37,7 +37,7 @@ import com.nhom21.english_learning_app.ui.theme.Quicksand
 /**
  * Màn hình Chúc mừng hoàn thành Đăng ký và Chọn trình độ (WelcomeSuccessScreen).
  * Hiển thị Mascot Owla ăn mừng cùng bong bóng thoại "Hurray!!",
- * thông báo "Welcome 👋 Your profile has been created successfully." và nút "CONTINUE TO LOG IN".
+ * thông báo "Welcome 👋 Your profile has been created successfully." và nút "START LEARNING".
  */
 @Composable
 fun WelcomeSuccessScreen(
@@ -114,9 +114,9 @@ fun WelcomeSuccessScreen(
                 )
             }
 
-            // 5. Nút 3D CONTINUE TO LOG IN
+            // 5. Nút 3D START LEARNING
             Owla3DButton(
-                text = "CONTINUE TO LOG IN",
+                text = "START LEARNING",
                 onClick = onContinueToLogin,
                 baseColor = OwlaColors.PrimaryBase,
                 shadowColor = OwlaColors.PrimaryShadow

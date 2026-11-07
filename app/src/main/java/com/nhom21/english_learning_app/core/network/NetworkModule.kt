@@ -2,6 +2,9 @@ package com.nhom21.english_learning_app.core.network
 
 import com.nhom21.english_learning_app.BuildConfig
 import com.nhom21.english_learning_app.data.remote.api.AuthApi
+import com.nhom21.english_learning_app.data.remote.api.HomeApi
+import com.nhom21.english_learning_app.data.remote.api.LevelApi
+import com.nhom21.english_learning_app.data.remote.api.ProfileApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -79,5 +82,23 @@ object NetworkModule {
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeApi(retrofit: Retrofit): HomeApi {
+        return retrofit.create(HomeApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLevelApi(retrofit: Retrofit): LevelApi {
+        return retrofit.create(LevelApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProfileApi(retrofit: Retrofit): ProfileApi {
+        return retrofit.create(ProfileApi::class.java)
     }
 }
