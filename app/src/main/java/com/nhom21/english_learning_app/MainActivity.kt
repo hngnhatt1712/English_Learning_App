@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.nhom21.english_learning_app.core.navigation.AppNavHost
+import com.nhom21.english_learning_app.core.navigation.Profile
 import com.nhom21.english_learning_app.core.network.SessionEvents
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -16,7 +17,7 @@ import javax.inject.Inject
 
 /**
  * Main entry-point Activity for Owla English.
- * Hosts [AppNavHost] inside the application theme and wires [SessionEvents] for 401 session expiration.
+ * Cấu hình xem trực tiếp màn hình ProfileScreen khi build/chạy ứng dụng.
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -31,6 +32,7 @@ class MainActivity : ComponentActivity() {
             English_Learning_AppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AppNavHost(
+                        startDestination = Profile,
                         modifier = Modifier.padding(innerPadding),
                         sessionEvents = sessionEvents
                     )
