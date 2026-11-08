@@ -70,6 +70,9 @@ data class ProfileUiState(
     val currentPasswordInput: String = "",
     val newPasswordInput: String = "",
     val confirmPasswordInput: String = "",
+    val currentPasswordError: String? = null,
+    val newPasswordError: String? = null,
+    val confirmPasswordError: String? = null,
     val passwordError: String? = null,
 
     val contactCategory: ContactCategory = ContactCategory.FEEDBACK,
@@ -80,6 +83,25 @@ data class ProfileUiState(
     val selectedTab: HomeTab = HomeTab.PROFILE,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
+    val isLoggingOut: Boolean = false,
     val snackbarMessage: String? = null,
     val errorMessage: String? = null
-)
+) {
+    val currentPassword: String
+        get() = currentPasswordInput
+
+    val newPassword: String
+        get() = newPasswordInput
+
+    val confirmPassword: String
+        get() = confirmPasswordInput
+
+    override fun toString(): String {
+        return "ProfileUiState(userId=$userId, username=$username, email=REDACTED, " +
+            "showChangePasswordDialog=$showChangePasswordDialog, " +
+            "currentPassword=REDACTED, newPassword=REDACTED, confirmPassword=REDACTED, " +
+            "currentPasswordError=$currentPasswordError, newPasswordError=$newPasswordError, " +
+            "confirmPasswordError=$confirmPasswordError, passwordError=$passwordError, " +
+            "isSaving=$isSaving, isLoggingOut=$isLoggingOut)"
+    }
+}
