@@ -44,7 +44,8 @@ enum class ApiErrorType(val wireName: String) {
  */
 data class FieldError(
     val field: String,
-    val message: String
+    val message: String,
+    val code: String? = null
 )
 
 /**

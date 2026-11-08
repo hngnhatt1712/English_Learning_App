@@ -138,11 +138,6 @@ fun AppNavHost(
                         launchSingleTop = true
                     }
                 },
-                onNavigateToForgotPassword = {
-                    navController.navigate(ForgotPassword) {
-                        launchSingleTop = true
-                    }
-                },
                 onLoggedOut = {
                     navController.navigate(Login) {
                         popUpTo(navController.graph.id) { inclusive = true }

@@ -2,12 +2,12 @@ package com.nhom21.english_learning_app.features.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nhom21.english_learning_app.core.network.TokenManager
-import com.nhom21.english_learning_app.data.remote.api.AuthApi
 import com.nhom21.english_learning_app.data.remote.api.ProfileApi
-import com.nhom21.english_learning_app.data.remote.dto.LogoutRequest
 import com.nhom21.english_learning_app.data.remote.dto.UpdateProfileRequest
+import com.nhom21.english_learning_app.data.repository.AuthRepository
+import com.nhom21.english_learning_app.data.repository.ChangePasswordResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,8 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val profileApi: ProfileApi,
-    private val authApi: AuthApi,
-    private val tokenManager: TokenManager
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -102,13 +101,28 @@ class ProfileViewModel @Inject constructor(
                 currentPasswordInput = "",
                 newPasswordInput = "",
                 confirmPasswordInput = "",
+                currentPasswordError = null,
+                newPasswordError = null,
+                confirmPasswordError = null,
                 passwordError = null
             )
         }
     }
 
     fun onCloseChangePasswordDialog() {
-        _uiState.update { it.copy(showChangePasswordDialog = false, passwordError = null) }
+        if (_uiState.value.isSaving) return
+        _uiState.update {
+            it.copy(
+                showChangePasswordDialog = false,
+                currentPasswordInput = "",
+                newPasswordInput = "",
+                confirmPasswordInput = "",
+                currentPasswordError = null,
+                newPasswordError = null,
+                confirmPasswordError = null,
+                passwordError = null
+            )
+        }
     }
 
     fun onOpenLogoutDialog() {
@@ -116,6 +130,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onCloseLogoutDialog() {
+        if (_uiState.value.isLoggingOut) return
         _uiState.update { it.copy(showLogoutDialog = false) }
     }
 
@@ -200,64 +215,183 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onCurrentPasswordChange(v: String) {
-        _uiState.update { it.copy(currentPasswordInput = v, passwordError = null) }
+        _uiState.update {
+            it.copy(
+                currentPasswordInput = v,
+                currentPasswordError = null,
+                passwordError = null
+            )
+        }
     }
 
     fun onNewPasswordChange(v: String) {
-        _uiState.update { it.copy(newPasswordInput = v, passwordError = null) }
+        _uiState.update {
+            it.copy(
+                newPasswordInput = v,
+                newPasswordError = null,
+                passwordError = null
+            )
+        }
     }
 
     fun onConfirmPasswordChange(v: String) {
-        _uiState.update { it.copy(confirmPasswordInput = v, passwordError = null) }
+        _uiState.update {
+            it.copy(
+                confirmPasswordInput = v,
+                confirmPasswordError = null,
+                passwordError = null
+            )
+        }
     }
 
     /**
-     * Đổi mật khẩu qua API
+     * Validates and submits password change request via [AuthRepository.changePassword].
      */
     fun submitChangePassword() {
-        val current = _uiState.value.currentPasswordInput
-        val newPass = _uiState.value.newPasswordInput
-        val confirm = _uiState.value.confirmPasswordInput
+        val state = _uiState.value
+        if (state.isSaving) return
 
-        if (current.isBlank()) {
-            _uiState.update { it.copy(passwordError = "Vui lòng nhập mật khẩu hiện tại") }
-            return
-        }
-        if (newPass.length < 8) {
-            _uiState.update { it.copy(passwordError = "Mật khẩu mới phải có tối thiểu 8 ký tự") }
-            return
-        }
-        if (newPass != confirm) {
-            _uiState.update { it.copy(passwordError = "Mật khẩu xác nhận không khớp") }
-            return
-        }
+        val current = state.currentPasswordInput
+        val newPass = state.newPasswordInput
+        val confirm = state.confirmPasswordInput
 
-        _uiState.update { it.copy(isSaving = true) }
+        val curErr = PasswordPolicy.validateCurrentPassword(current)
+        val newErr = PasswordPolicy.validateNewPassword(newPass)
+        val confirmErr = PasswordPolicy.validateConfirmPassword(newPass, confirm)
 
-        viewModelScope.launch {
-            // Giả lập/Thực hiện đổi mật khẩu thành công
+        if (curErr != null || newErr != null || confirmErr != null) {
             _uiState.update {
                 it.copy(
-                    isSaving = false,
-                    showChangePasswordDialog = false,
-                    snackbarMessage = "Đã đổi mật khẩu thành công!"
+                    currentPasswordError = curErr,
+                    newPasswordError = newErr,
+                    confirmPasswordError = confirmErr,
+                    passwordError = null
                 )
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isSaving = true,
+                currentPasswordError = null,
+                newPasswordError = null,
+                confirmPasswordError = null,
+                passwordError = null
+            )
+        }
+
+        viewModelScope.launch {
+            try {
+                when (val result = authRepository.changePassword(current, newPass)) {
+                    is ChangePasswordResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                showChangePasswordDialog = false,
+                                currentPasswordInput = "",
+                                newPasswordInput = "",
+                                confirmPasswordInput = "",
+                                currentPasswordError = null,
+                                newPasswordError = null,
+                                confirmPasswordError = null,
+                                passwordError = null,
+                                snackbarMessage = PasswordPolicy.MESSAGE_SUCCESS
+                            )
+                        }
+                    }
+
+                    is ChangePasswordResult.WrongCurrentPassword -> {
+                        _uiState.update {
+                            it.copy(
+                                currentPasswordError = PasswordPolicy.ERROR_CURRENT_WRONG,
+                                passwordError = null
+                            )
+                        }
+                    }
+
+                    is ChangePasswordResult.ValidationError -> {
+                        var serverCurErr: String? = null
+                        var serverNewErr: String? = null
+                        var hasUnknownField = false
+
+                        for ((field, code) in result.fieldErrors) {
+                            when (field) {
+                                "currentPassword" -> {
+                                    if (serverCurErr == null) {
+                                        serverCurErr = PasswordPolicy.mapCurrentPasswordCode(code)
+                                    }
+                                }
+                                "newPassword" -> {
+                                    if (serverNewErr == null) {
+                                        serverNewErr = PasswordPolicy.mapNewPasswordCode(code)
+                                    }
+                                }
+                                else -> {
+                                    hasUnknownField = true
+                                }
+                            }
+                        }
+
+                        val generalErr = if (
+                            serverCurErr == null &&
+                            serverNewErr == null &&
+                            (hasUnknownField || result.fieldErrors.isEmpty())
+                        ) {
+                            PasswordPolicy.ERROR_VALIDATION_GENERAL
+                        } else {
+                            null
+                        }
+
+                        _uiState.update {
+                            it.copy(
+                                currentPasswordError = serverCurErr,
+                                newPasswordError = serverNewErr,
+                                passwordError = generalErr
+                            )
+                        }
+                    }
+
+                    is ChangePasswordResult.SessionExpired -> {
+                        // Global session expiration listener redirects to Login.
+                    }
+
+                    is ChangePasswordResult.NetworkError -> {
+                        _uiState.update {
+                            it.copy(passwordError = PasswordPolicy.ERROR_NETWORK)
+                        }
+                    }
+
+                    is ChangePasswordResult.Unknown -> {
+                        _uiState.update {
+                            it.copy(passwordError = PasswordPolicy.ERROR_UNKNOWN)
+                        }
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                _uiState.update {
+                    it.copy(passwordError = PasswordPolicy.ERROR_UNKNOWN)
+                }
+            } finally {
+                _uiState.update { it.copy(isSaving = false) }
             }
         }
     }
 
-    /**
-     * Đăng xuất tài khoản qua POST /api/v1/auth/logout và xóa local Token
-     */
+    /** Logs out through the repository and navigates after local session cleanup. */
     fun logout(onLoggedOut: () -> Unit) {
+        if (_uiState.value.isLoggingOut) return
+        _uiState.update { it.copy(isLoggingOut = true) }
         viewModelScope.launch {
             try {
-                authApi.logout(LogoutRequest(fcmToken = null))
+                authRepository.logout()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (_: Exception) {
-                // Luôn tiếp tục xóa token local kể cả khi lỗi mạng
+                // Finish the local navigation flow after an unexpected repository error.
             } finally {
-                tokenManager.clearToken()
-                _uiState.update { it.copy(showLogoutDialog = false) }
+                _uiState.update { it.copy(isLoggingOut = false, showLogoutDialog = false) }
                 onLoggedOut()
             }
         }

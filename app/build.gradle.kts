@@ -13,7 +13,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.english_learning_app"
+        applicationId = "com.nhom21.english_learning_app"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -24,7 +24,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"http://10.0.3.2:8000/api/v1/\"")
+            buildConfigField("String", "BASE_URL", "\"http://192.168.1.7:8000/api/v1/\"")
         }
         release {
             optimization {

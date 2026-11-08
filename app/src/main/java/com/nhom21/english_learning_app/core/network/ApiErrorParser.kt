@@ -39,7 +39,7 @@ class ApiErrorParser @Inject constructor(
                     val field = item.field
                     val msg = item.message
                     if (field != null && msg != null) {
-                        FieldError(field = field, message = msg)
+                        FieldError(field = field, message = msg, code = item.code)
                     } else null
                 } ?: emptyList()
 

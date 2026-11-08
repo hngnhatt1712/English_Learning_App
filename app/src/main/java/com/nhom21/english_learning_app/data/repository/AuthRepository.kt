@@ -7,15 +7,32 @@ import com.nhom21.english_learning_app.core.network.ApiResult
 import com.nhom21.english_learning_app.core.network.TokenManager
 import com.nhom21.english_learning_app.data.remote.api.AuthApi
 import com.nhom21.english_learning_app.data.remote.dto.AuthResultDto
+import com.nhom21.english_learning_app.data.remote.dto.ChangePasswordRequest
 import com.nhom21.english_learning_app.data.remote.dto.LoginRequest
 import com.nhom21.english_learning_app.data.remote.dto.LogoutRequest
 import com.nhom21.english_learning_app.data.remote.dto.RegisterRequest
 import com.nhom21.english_learning_app.data.remote.dto.UserDto
 import kotlinx.serialization.SerializationException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/**
+ * Outcome of PUT /api/v1/auth/change-password per contract sections 3.3, 4.1, and 7.2.
+ */
+sealed interface ChangePasswordResult {
+    data object Success : ChangePasswordResult
+    data object WrongCurrentPassword : ChangePasswordResult
+    data class ValidationError(val fieldErrors: Map<String, String>) : ChangePasswordResult
+    data object SessionExpired : ChangePasswordResult
+    data object NetworkError : ChangePasswordResult
+    data class Unknown(val message: String?) : ChangePasswordResult
+}
 
 /**
  * Authentication repository interface per decisions D-A11 to D-A13 and D-C1.
@@ -27,7 +44,8 @@ interface AuthRepository {
     suspend fun register(username: String, email: String, password: String): ApiResult<AuthResultDto>
     suspend fun login(identifier: String, password: String): ApiResult<AuthResultDto>
     suspend fun me(): ApiResult<UserDto>
-    suspend fun logout(fcmToken: String? = null): ApiResult<Unit>
+    suspend fun logout()
+    suspend fun changePassword(currentPassword: String, newPassword: String): ChangePasswordResult
 }
 
 /**
@@ -39,6 +57,10 @@ class AuthRepositoryImpl @Inject constructor(
     private val tokenManager: TokenManager,
     private val errorParser: ApiErrorParser
 ) : AuthRepository {
+
+    private companion object {
+        private const val LOGOUT_TIMEOUT_MS = 5_000L
+    }
 
     override suspend fun register(username: String, email: String, password: String): ApiResult<AuthResultDto> {
         return try {
@@ -155,44 +177,79 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun logout(fcmToken: String?): ApiResult<Unit> {
-        var serverResult: ApiResult<Unit>? = null
+    /**
+     * Performs a best-effort server logout and always clears the local access token.
+     * After timeout, the request may be cancelled before the server removes the FCM token;
+     * this is acceptable under the API contract.
+     */
+    override suspend fun logout() {
         try {
-            val response = authApi.logout(LogoutRequest(fcmToken = fcmToken))
-            serverResult = if (response.status) {
-                ApiResult.Success(Unit)
-            } else {
-                ApiResult.Failure(
-                    ApiFailure(
-                        type = ApiErrorType.UNKNOWN,
-                        message = response.message,
-                        httpStatus = 200
-                    )
-                )
+            withTimeoutOrNull(LOGOUT_TIMEOUT_MS) {
+                authApi.logout(LogoutRequest(fcmToken = null))
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Server logout is best-effort; local logout must still complete.
+        } finally {
+            withContext(NonCancellable) {
+                tokenManager.clearToken()
+            }
+        }
+    }
+
+    /**
+     * Changes the current user's password and persists the newly issued access token before returning [ChangePasswordResult.Success].
+     */
+    override suspend fun changePassword(
+        currentPassword: String,
+        newPassword: String
+    ): ChangePasswordResult {
+        return try {
+            val response = authApi.changePassword(
+                ChangePasswordRequest(
+                    currentPassword = currentPassword,
+                    newPassword = newPassword
+                )
+            )
+            val data = response.data
+            if (response.status && data != null && data.accessToken.isNotBlank()) {
+                tokenManager.saveToken(data.accessToken)
+                ChangePasswordResult.Success
+            } else {
+                ChangePasswordResult.Unknown(response.message.takeIf { it.isNotBlank() })
+            }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: HttpException) {
             val body = e.response()?.errorBody()?.string()
-            serverResult = ApiResult.Failure(errorParser.parse(body, e.code()))
-        } catch (e: IOException) {
-            serverResult = ApiResult.Failure(
-                ApiFailure(
-                    type = ApiErrorType.NETWORK,
-                    message = e.message ?: "Network error",
-                    httpStatus = null
-                )
-            )
+            val failure = errorParser.parse(body, e.code())
+            when {
+                e.code() == 400 && failure.type == ApiErrorType.WRONG_PASSWORD -> {
+                    ChangePasswordResult.WrongCurrentPassword
+                }
+                e.code() == 422 || failure.type == ApiErrorType.VALIDATION_ERROR -> {
+                    val map = LinkedHashMap<String, String>()
+                    for (fe in failure.fieldErrors) {
+                        if (!map.containsKey(fe.field)) {
+                            map[fe.field] = fe.code ?: ""
+                        }
+                    }
+                    ChangePasswordResult.ValidationError(map)
+                }
+                e.code() == 401 && failure.type == ApiErrorType.UNAUTHORIZED -> {
+                    ChangePasswordResult.SessionExpired
+                }
+                else -> {
+                    ChangePasswordResult.Unknown(failure.message)
+                }
+            }
+        } catch (_: IOException) {
+            ChangePasswordResult.NetworkError
         } catch (e: SerializationException) {
-            serverResult = ApiResult.Failure(
-                ApiFailure(
-                    type = ApiErrorType.UNKNOWN,
-                    message = e.message ?: "Serialization error",
-                    httpStatus = null
-                )
-            )
-        } finally {
-            // Decision D-A12: Guarantee token is cleared locally even on server error or network disconnect
-            tokenManager.clearToken()
+            ChangePasswordResult.Unknown(e.message)
+        } catch (e: Exception) {
+            ChangePasswordResult.Unknown(e.message)
         }
-        return serverResult ?: ApiResult.Success(Unit)
     }
 }

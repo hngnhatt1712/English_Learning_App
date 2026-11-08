@@ -12,6 +12,8 @@ from app.schemas.auth import (
     UserDto,
 )
 from app.services import auth_service, logout_service
+from app.schemas.password import ChangePasswordRequest
+from app.services import password_service
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -70,3 +72,18 @@ def logout(user: CurrentUser, db: DbSession, payload: LogoutRequest | None = Non
     fcm_token = payload.fcm_token if payload is not None else None
     logout_service.logout(db, user.id, fcm_token)
     return ok(None, "Logged out")
+
+
+@router.put(
+    "/change-password",
+    response_model=ApiResponse[AuthResultDto],
+    summary="Change the current user's password and issue a new token",
+    responses={
+        400: {"model": ApiResponse[None], "description": "wrong-password"},
+        401: {"model": ApiResponse[None], "description": "unauthorized"},
+        422: {"model": ApiResponse[None], "description": "validation-error"},
+    },
+)
+def change_password(payload: ChangePasswordRequest, user: CurrentUser, db: DbSession):
+    return ok(password_service.change_password(db, user, payload), "Password changed")
+

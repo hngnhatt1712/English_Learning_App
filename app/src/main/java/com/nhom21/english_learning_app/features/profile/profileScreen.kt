@@ -715,6 +715,9 @@ private fun ChangePasswordDialog(
     currentPass: String,
     newPass: String,
     confirmPass: String,
+    currentPassError: String?,
+    newPassError: String?,
+    confirmPassError: String?,
     errorMessage: String?,
     isLoading: Boolean,
     onCurrentPassChange: (String) -> Unit,
@@ -727,8 +730,13 @@ private fun ChangePasswordDialog(
     var showNewPass by remember { mutableStateOf(false) }
     var showConfirmPass by remember { mutableStateOf(false) }
 
+    val passwordKeyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Password,
+        autoCorrectEnabled = false
+    )
+
     AlertDialog(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = { if (!isLoading) onDismissRequest() },
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
@@ -745,10 +753,26 @@ private fun ChangePasswordDialog(
                     value = currentPass,
                     onValueChange = onCurrentPassChange,
                     label = { Text("Mật khẩu hiện tại") },
+                    enabled = !isLoading,
+                    isError = currentPassError != null,
+                    supportingText = currentPassError?.let { err ->
+                        {
+                            Text(
+                                text = err,
+                                color = OwlaColors.DangerBase,
+                                fontSize = 12.sp,
+                                fontFamily = Quicksand
+                            )
+                        }
+                    },
                     singleLine = true,
+                    keyboardOptions = passwordKeyboardOptions,
                     visualTransformation = if (showCurrentPass) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        IconButton(onClick = { showCurrentPass = !showCurrentPass }) {
+                        IconButton(
+                            onClick = { showCurrentPass = !showCurrentPass },
+                            enabled = !isLoading
+                        ) {
                             Icon(
                                 imageVector = if (showCurrentPass) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = "Toggle password visibility"
@@ -764,10 +788,26 @@ private fun ChangePasswordDialog(
                     value = newPass,
                     onValueChange = onNewPassChange,
                     label = { Text("Mật khẩu mới (≥ 8 ký tự)") },
+                    enabled = !isLoading,
+                    isError = newPassError != null,
+                    supportingText = newPassError?.let { err ->
+                        {
+                            Text(
+                                text = err,
+                                color = OwlaColors.DangerBase,
+                                fontSize = 12.sp,
+                                fontFamily = Quicksand
+                            )
+                        }
+                    },
                     singleLine = true,
+                    keyboardOptions = passwordKeyboardOptions,
                     visualTransformation = if (showNewPass) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        IconButton(onClick = { showNewPass = !showNewPass }) {
+                        IconButton(
+                            onClick = { showNewPass = !showNewPass },
+                            enabled = !isLoading
+                        ) {
                             Icon(
                                 imageVector = if (showNewPass) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = "Toggle password visibility"
@@ -783,10 +823,26 @@ private fun ChangePasswordDialog(
                     value = confirmPass,
                     onValueChange = onConfirmPassChange,
                     label = { Text("Nhập lại mật khẩu mới") },
+                    enabled = !isLoading,
+                    isError = confirmPassError != null,
+                    supportingText = confirmPassError?.let { err ->
+                        {
+                            Text(
+                                text = err,
+                                color = OwlaColors.DangerBase,
+                                fontSize = 12.sp,
+                                fontFamily = Quicksand
+                            )
+                        }
+                    },
                     singleLine = true,
+                    keyboardOptions = passwordKeyboardOptions,
                     visualTransformation = if (showConfirmPass) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
-                        IconButton(onClick = { showConfirmPass = !showConfirmPass }) {
+                        IconButton(
+                            onClick = { showConfirmPass = !showConfirmPass },
+                            enabled = !isLoading
+                        ) {
                             Icon(
                                 imageVector = if (showConfirmPass) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = "Toggle password visibility"
@@ -811,13 +867,17 @@ private fun ChangePasswordDialog(
             Owla3DButton(
                 text = "Đổi mật khẩu",
                 onClick = onSubmitClick,
+                enabled = !isLoading,
                 isLoading = isLoading,
                 height = 44.dp,
                 modifier = Modifier.width(135.dp)
             )
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) {
+            TextButton(
+                onClick = { if (!isLoading) onDismissRequest() },
+                enabled = !isLoading
+            ) {
                 Text(
                     text = "Hủy",
                     fontFamily = Baloo2,
@@ -834,11 +894,12 @@ private fun ChangePasswordDialog(
  */
 @Composable
 private fun LogoutDialog(
+    isLoggingOut: Boolean,
     onConfirmLogout: () -> Unit,
     onDismissRequest: () -> Unit
 ) {
     AlertDialog(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = { if (!isLoggingOut) onDismissRequest() },
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
@@ -863,7 +924,8 @@ private fun LogoutDialog(
                 // Nút 1: Ở lại / Hủy (Chính ở trên)
                 Owla3DButton(
                     text = "Ở lại học tiếp",
-                    onClick = onDismissRequest,
+                    onClick = { if (!isLoggingOut) onDismissRequest() },
+                    enabled = !isLoggingOut,
                     baseColor = OwlaColors.PrimaryBase,
                     shadowColor = OwlaColors.PrimaryShadow,
                     height = 46.dp
@@ -873,6 +935,8 @@ private fun LogoutDialog(
                 Owla3DButton(
                     text = "Đăng xuất",
                     onClick = onConfirmLogout,
+                    enabled = !isLoggingOut,
+                    isLoading = isLoggingOut,
                     baseColor = OwlaColors.DangerBase,
                     shadowColor = OwlaColors.DangerShadow,
                     height = 44.dp
@@ -1187,7 +1251,6 @@ fun ProfileRoute(
     onNavigateToLesson: () -> Unit = {},
     onNavigateToPractice: () -> Unit = {},
     onNavigateToStatistics: () -> Unit = {},
-    onNavigateToForgotPassword: () -> Unit = {},
     onLoggedOut: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -1205,7 +1268,7 @@ fun ProfileRoute(
         },
         onNavigateToStatistics = onNavigateToStatistics,
         onEditUsernameClick = { viewModel.onOpenEditUsernameDialog() },
-        onChangePasswordClick = onNavigateToForgotPassword,
+        onChangePasswordClick = { viewModel.onOpenChangePasswordDialog() },
         onNotificationSettingsClick = { viewModel.onOpenContactUsSheet() },
         onThemeClick = { viewModel.onOpenThemeDialog() },
         onContactUsClick = { viewModel.onOpenContactUsSheet() },
@@ -1233,6 +1296,9 @@ fun ProfileRoute(
             currentPass = uiState.currentPasswordInput,
             newPass = uiState.newPasswordInput,
             confirmPass = uiState.confirmPasswordInput,
+            currentPassError = uiState.currentPasswordError,
+            newPassError = uiState.newPasswordError,
+            confirmPassError = uiState.confirmPasswordError,
             errorMessage = uiState.passwordError,
             isLoading = uiState.isSaving,
             onCurrentPassChange = { viewModel.onCurrentPasswordChange(it) },
@@ -1246,6 +1312,7 @@ fun ProfileRoute(
     // Dialog Logout Confirmation
     if (uiState.showLogoutDialog) {
         LogoutDialog(
+            isLoggingOut = uiState.isLoggingOut,
             onConfirmLogout = { viewModel.logout(onLoggedOut) },
             onDismissRequest = { viewModel.onCloseLogoutDialog() }
         )

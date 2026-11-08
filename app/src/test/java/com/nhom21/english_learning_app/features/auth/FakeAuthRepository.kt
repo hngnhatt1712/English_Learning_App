@@ -4,6 +4,7 @@ import com.nhom21.english_learning_app.core.network.ApiResult
 import com.nhom21.english_learning_app.data.remote.dto.AuthResultDto
 import com.nhom21.english_learning_app.data.remote.dto.UserDto
 import com.nhom21.english_learning_app.data.repository.AuthRepository
+import com.nhom21.english_learning_app.data.repository.ChangePasswordResult
 
 /**
  * Fake implementation of [AuthRepository] for unit testing [LoginViewModel].
@@ -88,10 +89,10 @@ class FakeAuthRepository : AuthRepository {
         )
     )
 
-    override suspend fun logout(fcmToken: String?): ApiResult<Unit> = ApiResult.Failure(
-        com.nhom21.english_learning_app.core.network.ApiFailure(
-            type = com.nhom21.english_learning_app.core.network.ApiErrorType.UNKNOWN,
-            message = "Not implemented in fake"
-        )
-    )
+    override suspend fun logout() = Unit
+
+    override suspend fun changePassword(
+        currentPassword: String,
+        newPassword: String
+    ): ChangePasswordResult = ChangePasswordResult.NetworkError
 }
