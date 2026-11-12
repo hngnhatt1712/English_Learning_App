@@ -5,6 +5,7 @@ import com.nhom21.english_learning_app.data.remote.api.AuthApi
 import com.nhom21.english_learning_app.data.remote.api.HomeApi
 import com.nhom21.english_learning_app.data.remote.api.LevelApi
 import com.nhom21.english_learning_app.data.remote.api.ProfileApi
+import com.nhom21.english_learning_app.data.remote.api.TopicApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -100,5 +101,11 @@ object NetworkModule {
     @Singleton
     fun provideProfileApi(retrofit: Retrofit): ProfileApi {
         return retrofit.create(ProfileApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTopicApi(retrofit: Retrofit): TopicApi {
+        return retrofit.create(TopicApi::class.java)
     }
 }

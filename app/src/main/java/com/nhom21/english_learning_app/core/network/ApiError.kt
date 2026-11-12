@@ -9,6 +9,8 @@ import kotlinx.serialization.Serializable
 enum class ApiErrorType(val wireName: String) {
     BAD_REQUEST("bad-request"),
     WRONG_PASSWORD("wrong-password"),
+    INVALID_OTP("invalid_otp"),
+    INVALID_RESET_TOKEN("invalid_reset_token"),
     UNAUTHORIZED("unauthorized"),
     INVALID_CREDENTIALS("invalid-credentials"),
     FORBIDDEN("forbidden"),

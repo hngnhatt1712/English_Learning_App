@@ -3,8 +3,9 @@ import logging
 import re
 import traceback
 import uuid
+from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Mapping
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -15,6 +16,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 class ErrorType(str, Enum):
     BAD_REQUEST = "bad-request"
     WRONG_PASSWORD = "wrong-password"
+    INVALID_OTP = "invalid_otp"
+    INVALID_RESET_TOKEN = "invalid_reset_token"
     UNAUTHORIZED = "unauthorized"
     INVALID_CREDENTIALS = "invalid-credentials"
     FORBIDDEN = "forbidden"

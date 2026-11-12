@@ -12,10 +12,15 @@ import com.nhom21.english_learning_app.core.network.TokenManager
 import com.nhom21.english_learning_app.data.remote.api.AuthApi
 import com.nhom21.english_learning_app.data.remote.dto.AuthResultDto
 import com.nhom21.english_learning_app.data.remote.dto.ChangePasswordRequest
+import com.nhom21.english_learning_app.data.remote.dto.ForgotPasswordRequest
+import com.nhom21.english_learning_app.data.remote.dto.ForgotPasswordResultDto
 import com.nhom21.english_learning_app.data.remote.dto.LoginRequest
 import com.nhom21.english_learning_app.data.remote.dto.LogoutRequest
 import com.nhom21.english_learning_app.data.remote.dto.RegisterRequest
+import com.nhom21.english_learning_app.data.remote.dto.ResetPasswordRequest
 import com.nhom21.english_learning_app.data.remote.dto.UserDto
+import com.nhom21.english_learning_app.data.remote.dto.VerifyOtpRequest
+import com.nhom21.english_learning_app.data.remote.dto.VerifyOtpResultDto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -564,6 +569,9 @@ class AuthRepositoryChangePasswordTest {
         override suspend fun login(request: LoginRequest): ApiResponse<AuthResultDto> = error("Unused")
         override suspend fun me(): ApiResponse<UserDto> = error("Unused")
         override suspend fun logout(request: LogoutRequest): ApiResponse<Unit?> = error("Unused")
+        override suspend fun forgotPassword(request: ForgotPasswordRequest): ApiResponse<ForgotPasswordResultDto> = error("Unused")
+        override suspend fun verifyOtp(request: VerifyOtpRequest): ApiResponse<VerifyOtpResultDto> = error("Unused")
+        override suspend fun resetPassword(request: ResetPasswordRequest): ApiResponse<Unit?> = error("Unused")
     }
 
     private class CountingPreferencesDataStore : DataStore<Preferences> {

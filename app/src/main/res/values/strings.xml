@@ -26,4 +26,20 @@
     <string name="signup_error_password_complexity">Mật khẩu cần có ít nhất một chữ cái và một chữ số</string>
     <string name="signup_error_confirm_required">Vui lòng nhập lại mật khẩu</string>
     <string name="signup_error_confirm_mismatch">Mật khẩu nhập lại không khớp</string>
+
+    <!-- Forgot / Reset password strings per contract section 3.3, 7.2 & 16 -->
+    <string name="forgot_password_error_email_required">Vui lòng nhập email</string>
+    <string name="forgot_password_error_email_invalid">Email không hợp lệ</string>
+    <string name="forgot_password_error_captcha_required">Vui lòng nhập mã xác nhận (CAPTCHA)!</string>
+    <string name="forgot_password_error_captcha_invalid">Mã xác nhận (CAPTCHA) không chính xác!</string>
+    <string name="forgot_password_error_otp_required">Vui lòng nhập mã OTP</string>
+    <string name="forgot_password_error_otp_invalid_format">Mã OTP phải gồm đúng 6 chữ số</string>
+    <string name="forgot_password_error_otp_invalid_or_expired">Mã không đúng hoặc đã hết hạn. Vui lòng yêu cầu mã mới.</string>
+    <string name="forgot_password_error_reset_token_invalid">Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại.</string>
+    <string name="forgot_password_error_network">Không kết nối được máy chủ</string>
+    <string name="forgot_password_error_server">Lỗi hệ thống, vui lòng thử lại</string>
+    <string name="forgot_password_error_general">Đã xảy ra lỗi, vui lòng thử lại sau</string>
+    <string name="forgot_password_msg_otp_sent">Mã OTP đã được gửi thành công!</string>
+    <string name="forgot_password_msg_otp_resent">Mã OTP mới đã được gửi lại!</string>
+    <string name="forgot_password_msg_reset_success">Mật khẩu của bạn đã được đặt lại thành công!</string>
 </resources>

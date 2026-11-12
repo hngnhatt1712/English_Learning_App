@@ -8,10 +8,15 @@ import com.nhom21.english_learning_app.core.network.TokenManager
 import com.nhom21.english_learning_app.data.remote.api.AuthApi
 import com.nhom21.english_learning_app.data.remote.dto.AuthResultDto
 import com.nhom21.english_learning_app.data.remote.dto.ChangePasswordRequest
+import com.nhom21.english_learning_app.data.remote.dto.ForgotPasswordRequest
+import com.nhom21.english_learning_app.data.remote.dto.ForgotPasswordResultDto
 import com.nhom21.english_learning_app.data.remote.dto.LoginRequest
 import com.nhom21.english_learning_app.data.remote.dto.LogoutRequest
 import com.nhom21.english_learning_app.data.remote.dto.RegisterRequest
+import com.nhom21.english_learning_app.data.remote.dto.ResetPasswordRequest
 import com.nhom21.english_learning_app.data.remote.dto.UserDto
+import com.nhom21.english_learning_app.data.remote.dto.VerifyOtpRequest
+import com.nhom21.english_learning_app.data.remote.dto.VerifyOtpResultDto
 import kotlinx.serialization.SerializationException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -46,6 +51,9 @@ interface AuthRepository {
     suspend fun me(): ApiResult<UserDto>
     suspend fun logout()
     suspend fun changePassword(currentPassword: String, newPassword: String): ChangePasswordResult
+    suspend fun requestResetOtp(email: String): ApiResult<ForgotPasswordResultDto>
+    suspend fun verifyResetOtp(email: String, otp: String): ApiResult<VerifyOtpResultDto>
+    suspend fun resetPassword(resetToken: String, newPassword: String): ApiResult<Unit>
 }
 
 /**
@@ -250,6 +258,148 @@ class AuthRepositoryImpl @Inject constructor(
             ChangePasswordResult.Unknown(e.message)
         } catch (e: Exception) {
             ChangePasswordResult.Unknown(e.message)
+        }
+    }
+
+    override suspend fun requestResetOtp(email: String): ApiResult<ForgotPasswordResultDto> {
+        return try {
+            val response = authApi.forgotPassword(ForgotPasswordRequest(email = email))
+            val data = response.data
+            if (response.status && data != null) {
+                ApiResult.Success(data)
+            } else {
+                ApiResult.Failure(
+                    ApiFailure(
+                        type = ApiErrorType.UNKNOWN,
+                        message = response.message,
+                        httpStatus = 200
+                    )
+                )
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: HttpException) {
+            val body = e.response()?.errorBody()?.string()
+            ApiResult.Failure(errorParser.parse(body, e.code()))
+        } catch (e: IOException) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.NETWORK,
+                    message = e.message ?: "Network error",
+                    httpStatus = null
+                )
+            )
+        } catch (e: SerializationException) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.UNKNOWN,
+                    message = e.message ?: "Serialization error",
+                    httpStatus = null
+                )
+            )
+        } catch (e: Exception) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.UNKNOWN,
+                    message = e.message ?: "Unknown error",
+                    httpStatus = null
+                )
+            )
+        }
+    }
+
+    override suspend fun verifyResetOtp(email: String, otp: String): ApiResult<VerifyOtpResultDto> {
+        return try {
+            val response = authApi.verifyOtp(VerifyOtpRequest(email = email, otp = otp))
+            val data = response.data
+            if (response.status && data != null && data.resetToken.isNotBlank()) {
+                ApiResult.Success(data)
+            } else {
+                ApiResult.Failure(
+                    ApiFailure(
+                        type = ApiErrorType.UNKNOWN,
+                        message = response.message,
+                        httpStatus = 200
+                    )
+                )
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: HttpException) {
+            val body = e.response()?.errorBody()?.string()
+            ApiResult.Failure(errorParser.parse(body, e.code()))
+        } catch (e: IOException) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.NETWORK,
+                    message = e.message ?: "Network error",
+                    httpStatus = null
+                )
+            )
+        } catch (e: SerializationException) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.UNKNOWN,
+                    message = e.message ?: "Serialization error",
+                    httpStatus = null
+                )
+            )
+        } catch (e: Exception) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.UNKNOWN,
+                    message = e.message ?: "Unknown error",
+                    httpStatus = null
+                )
+            )
+        }
+    }
+
+    override suspend fun resetPassword(resetToken: String, newPassword: String): ApiResult<Unit> {
+        return try {
+            val response = authApi.resetPassword(
+                ResetPasswordRequest(resetToken = resetToken, newPassword = newPassword)
+            )
+            if (response.status) {
+                ApiResult.Success(Unit)
+            } else {
+                ApiResult.Failure(
+                    ApiFailure(
+                        type = ApiErrorType.UNKNOWN,
+                        message = response.message,
+                        httpStatus = 200
+                    )
+                )
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: HttpException) {
+            val body = e.response()?.errorBody()?.string()
+            ApiResult.Failure(errorParser.parse(body, e.code()))
+        } catch (e: IOException) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.NETWORK,
+                    message = e.message ?: "Network error",
+                    httpStatus = null
+                )
+            )
+        } catch (e: SerializationException) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.UNKNOWN,
+                    message = e.message ?: "Serialization error",
+                    httpStatus = null
+                )
+            )
+        } catch (e: Exception) {
+            ApiResult.Failure(
+                ApiFailure(
+                    type = ApiErrorType.UNKNOWN,
+                    message = e.message ?: "Unknown error",
+                    httpStatus = null
+                )
+            )
         }
     }
 }
