@@ -37,7 +37,9 @@ system_promt.md
 owla-design-system-skill.md
 api-contract.md
 task.md
-GEMINI.md
+AGENT.md
+*.md
+/backend/tests/
 # Python
 __pycache__/
 *.py[cod]
