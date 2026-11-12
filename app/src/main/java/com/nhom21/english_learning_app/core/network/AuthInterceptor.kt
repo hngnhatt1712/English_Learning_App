@@ -25,7 +25,11 @@ class AuthInterceptor @Inject constructor(
         val path = originalRequest.url.encodedPath
 
         // Public endpoints that must not receive the Authorization header
-        val isPublicAuthEndpoint = path.endsWith("auth/login") || path.endsWith("auth/register")
+        val isPublicAuthEndpoint = path.endsWith("auth/login") ||
+            path.endsWith("auth/register") ||
+            path.endsWith("auth/forgot-password") ||
+            path.endsWith("auth/forgot-password/verify-otp") ||
+            path.endsWith("auth/reset-password")
 
         val request = if (!isPublicAuthEndpoint) {
             val token = tokenManager.currentTokenBlocking()

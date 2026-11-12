@@ -22,6 +22,10 @@ from app.api import levels
 app.include_router(levels.router, prefix="/api/v1")
 from app.api import profile
 app.include_router(profile.router, prefix="/api/v1")
+from app.api import lessons, topics
+
+app.include_router(topics.router, prefix="/api/v1")
+app.include_router(lessons.router, prefix="/api/v1")
 
 
 @app.get("/")

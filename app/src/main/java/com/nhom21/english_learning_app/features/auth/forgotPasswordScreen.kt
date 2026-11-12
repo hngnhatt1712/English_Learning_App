@@ -1,6 +1,7 @@
 package com.nhom21.english_learning_app.features.auth
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -27,6 +28,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,7 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nhom21.english_learning_app.ui.theme.OwlaColors
 import com.nhom21.english_learning_app.ui.theme.Quicksand
 
@@ -224,7 +228,7 @@ fun ForgotPasswordScreen(
                         color = deepTealColor,
                         modifier = Modifier
                             .padding(horizontal = 14.dp)
-                            .clickable(onClick = linkAction)
+                            .clickable(enabled = !uiState.isLoading, onClick = linkAction)
                     )
 
                     HorizontalDivider(
@@ -313,12 +317,27 @@ fun ForgotPasswordDarkModePreview() {
 @Composable
 fun ForgotPasswordRoute(
     modifier: Modifier = Modifier,
-    viewModel: ForgotPasswordViewModel = viewModel(),
+    viewModel: ForgotPasswordViewModel = hiltViewModel(),
     onNavigateToLogin: () -> Unit = {}
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    BackHandler(
+        enabled = uiState.currentStep == ForgotPasswordStep.VERIFY_OTP ||
+            uiState.currentStep == ForgotPasswordStep.RESET_PASSWORD
+    ) {
+        viewModel.goToPreviousStep()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearSensitiveData()
+        }
+    }
+
     ForgotPasswordScreen(
         modifier = modifier,
-        uiState = viewModel.uiState,
+        uiState = uiState,
         onEmailOrPhoneChange = viewModel::onEmailOrPhoneChange,
         onCaptchaInputChange = viewModel::onCaptchaInputChange,
         onOtpInputChange = viewModel::onOtpInputChange,
@@ -331,7 +350,10 @@ fun ForgotPasswordRoute(
         onVerifyOtpClick = viewModel::verifyOtpCode,
         onResendOtpClick = viewModel::resendOtp,
         onResetPasswordClick = { viewModel.resetPassword {} },
-        onNavigateToLogin = onNavigateToLogin,
+        onNavigateToLogin = {
+            viewModel.clearSensitiveData()
+            onNavigateToLogin()
+        },
         onGoToPreviousStep = viewModel::goToPreviousStep
     )
 }

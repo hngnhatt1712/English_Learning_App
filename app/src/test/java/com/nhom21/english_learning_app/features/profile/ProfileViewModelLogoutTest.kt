@@ -4,10 +4,12 @@ import com.nhom21.english_learning_app.core.network.ApiResponse
 import com.nhom21.english_learning_app.core.network.ApiResult
 import com.nhom21.english_learning_app.data.remote.api.ProfileApi
 import com.nhom21.english_learning_app.data.remote.dto.AuthResultDto
+import com.nhom21.english_learning_app.data.remote.dto.ForgotPasswordResultDto
 import com.nhom21.english_learning_app.data.remote.dto.LoginRequest
 import com.nhom21.english_learning_app.data.remote.dto.ProfileDto
 import com.nhom21.english_learning_app.data.remote.dto.UpdateProfileRequest
 import com.nhom21.english_learning_app.data.remote.dto.UserDto
+import com.nhom21.english_learning_app.data.remote.dto.VerifyOtpResultDto
 import com.nhom21.english_learning_app.data.repository.AuthRepository
 import com.nhom21.english_learning_app.data.repository.ChangePasswordResult
 import kotlinx.coroutines.CompletableDeferred
@@ -126,6 +128,9 @@ class ProfileViewModelLogoutTest {
         override suspend fun login(identifier: String, password: String): ApiResult<AuthResultDto> = error("Unused")
         override suspend fun me(): ApiResult<UserDto> = error("Unused")
         override suspend fun changePassword(currentPassword: String, newPassword: String): ChangePasswordResult = error("Unused")
+        override suspend fun requestResetOtp(email: String): ApiResult<ForgotPasswordResultDto> = error("Unused")
+        override suspend fun verifyResetOtp(email: String, otp: String): ApiResult<VerifyOtpResultDto> = error("Unused")
+        override suspend fun resetPassword(resetToken: String, newPassword: String): ApiResult<Unit> = error("Unused")
     }
 
     private class FakeProfileApi : ProfileApi {

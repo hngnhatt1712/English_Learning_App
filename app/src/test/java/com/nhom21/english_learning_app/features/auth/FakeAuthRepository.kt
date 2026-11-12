@@ -1,8 +1,12 @@
 package com.nhom21.english_learning_app.features.auth
 
+import com.nhom21.english_learning_app.core.network.ApiErrorType
+import com.nhom21.english_learning_app.core.network.ApiFailure
 import com.nhom21.english_learning_app.core.network.ApiResult
 import com.nhom21.english_learning_app.data.remote.dto.AuthResultDto
+import com.nhom21.english_learning_app.data.remote.dto.ForgotPasswordResultDto
 import com.nhom21.english_learning_app.data.remote.dto.UserDto
+import com.nhom21.english_learning_app.data.remote.dto.VerifyOtpResultDto
 import com.nhom21.english_learning_app.data.repository.AuthRepository
 import com.nhom21.english_learning_app.data.repository.ChangePasswordResult
 
@@ -95,4 +99,53 @@ class FakeAuthRepository : AuthRepository {
         currentPassword: String,
         newPassword: String
     ): ChangePasswordResult = ChangePasswordResult.NetworkError
+
+    // ── Forgot / Reset Password support ─────────────────────────────────────
+
+    var requestResetOtpResult: ApiResult<ForgotPasswordResultDto> =
+        ApiResult.Success(ForgotPasswordResultDto(retryAfterSeconds = 60))
+    var requestResetOtpAction: (suspend (String) -> ApiResult<ForgotPasswordResultDto>)? = null
+    var requestResetOtpCallCount: Int = 0
+        private set
+    var lastRequestedEmail: String? = null
+        private set
+
+    override suspend fun requestResetOtp(email: String): ApiResult<ForgotPasswordResultDto> {
+        requestResetOtpCallCount++
+        lastRequestedEmail = email
+        return requestResetOtpAction?.invoke(email) ?: requestResetOtpResult
+    }
+
+    var verifyResetOtpResult: ApiResult<VerifyOtpResultDto> =
+        ApiResult.Success(VerifyOtpResultDto(resetToken = "test-reset-token-123456", expiresInSeconds = 600))
+    var verifyResetOtpAction: (suspend (String, String) -> ApiResult<VerifyOtpResultDto>)? = null
+    var verifyResetOtpCallCount: Int = 0
+        private set
+    var lastVerifyEmail: String? = null
+        private set
+    var lastVerifyOtp: String? = null
+        private set
+
+    override suspend fun verifyResetOtp(email: String, otp: String): ApiResult<VerifyOtpResultDto> {
+        verifyResetOtpCallCount++
+        lastVerifyEmail = email
+        lastVerifyOtp = otp
+        return verifyResetOtpAction?.invoke(email, otp) ?: verifyResetOtpResult
+    }
+
+    var resetPasswordResult: ApiResult<Unit> = ApiResult.Success(Unit)
+    var resetPasswordAction: (suspend (String, String) -> ApiResult<Unit>)? = null
+    var resetPasswordCallCount: Int = 0
+        private set
+    var lastResetToken: String? = null
+        private set
+    var lastNewPassword: String? = null
+        private set
+
+    override suspend fun resetPassword(resetToken: String, newPassword: String): ApiResult<Unit> {
+        resetPasswordCallCount++
+        lastResetToken = resetToken
+        lastNewPassword = newPassword
+        return resetPasswordAction?.invoke(resetToken, newPassword) ?: resetPasswordResult
+    }
 }

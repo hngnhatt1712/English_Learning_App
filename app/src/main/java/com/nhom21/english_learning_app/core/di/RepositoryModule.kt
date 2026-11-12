@@ -4,6 +4,8 @@ import com.nhom21.english_learning_app.data.repository.AuthRepository
 import com.nhom21.english_learning_app.data.repository.AuthRepositoryImpl
 import com.nhom21.english_learning_app.data.repository.HomeRepository
 import com.nhom21.english_learning_app.data.repository.HomeRepositoryImpl
+import com.nhom21.english_learning_app.data.repository.TopicRepository
+import com.nhom21.english_learning_app.data.repository.TopicRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -28,4 +30,10 @@ abstract class RepositoryModule {
     abstract fun bindHomeRepository(
         impl: HomeRepositoryImpl
     ): HomeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTopicRepository(
+        impl: TopicRepositoryImpl
+    ): TopicRepository
 }
