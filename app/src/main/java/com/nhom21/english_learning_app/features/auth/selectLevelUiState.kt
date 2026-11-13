@@ -1,23 +1,19 @@
 package com.nhom21.english_learning_app.features.auth
 
-/**
- * Đại diện cho thông tin một trình độ tiếng Anh được lựa chọn.
- */
-data class SelectLevelOption(
-    val code: String,        // Ví dụ: "A1", "A2", "B1"
-    val description: String  // Ví dụ: "I just started learning English"
-)
+import com.nhom21.english_learning_app.core.network.ApiErrorType
+import com.nhom21.english_learning_app.domain.model.Level
 
-/**
- * UI State cho màn hình Chọn trình độ tiếng Anh (SelectLevelScreen).
- */
 data class SelectLevelUiState(
-    val selectedLevel: String = "", // Mặc định chọn A2 như trong thiết kế mẫu
-    val levels: List<SelectLevelOption> = listOf(
-        SelectLevelOption("A1", "I just started learning English"),
-        SelectLevelOption("A2", "I know some words and phrases"),
-        SelectLevelOption("B1", "I can have a simple conversation")
-    ),
+    val levels: List<Level> = emptyList(),
+    val selectedLevelId: String? = null,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
-)
+    val isSubmitting: Boolean = false,
+    val errorMessage: String? = null,
+    val errorType: ApiErrorType? = null,
+    val isLoadError: Boolean = false,
+    val isSelectionSaved: Boolean = false
+) {
+    val canContinue: Boolean
+        get() = !isLoading && !isSubmitting && !isSelectionSaved &&
+            levels.any { it.id == selectedLevelId }
+}

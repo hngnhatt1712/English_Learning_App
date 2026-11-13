@@ -1,15 +1,22 @@
 package com.nhom21.english_learning_app.core.navigation
 
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.nhom21.english_learning_app.core.network.SessionEvents
 import com.nhom21.english_learning_app.features.auth.ForgotPasswordRoute
@@ -18,14 +25,17 @@ import com.nhom21.english_learning_app.features.auth.SelectLevelRoute
 import com.nhom21.english_learning_app.features.auth.SignupRoute
 import com.nhom21.english_learning_app.features.auth.WelcomeSuccessScreen
 import com.nhom21.english_learning_app.features.home.HomeRoute
+import com.nhom21.english_learning_app.features.home.HomeViewModel
+import com.nhom21.english_learning_app.features.lesson.LessonPlaceholderScreen
+import com.nhom21.english_learning_app.features.practice.PracticePlaceholderScreen
 import com.nhom21.english_learning_app.features.profile.ProfileRoute
 
 /**
  * Root Navigation Host for the application (Sprint 3).
  *
- * Hosts 5 flat destinations: [Login], [Signup], [SelectLevel], [WelcomeSuccess], and [Home].
- * Observes [SessionEvents.sessionExpired] lifecycle-safely to redirect to [Login] and clear
- * the back stack upon `401 unauthorized` responses.
+ * Auth and Main are separate nested graphs on one NavController. Login remains the
+ * start destination until the separate Splash/session-validation task is implemented.
+ * No token-only shortcut bypasses the server-confirmed selected-level decision.
  */
 @Composable
 fun AppNavHost(
@@ -43,116 +53,99 @@ fun AppNavHost(
                     val isOnLogin = navController.currentBackStackEntry
                         ?.destination
                         ?.hasRoute<Login>() == true
-                    when (AppNavTransitions.onSessionExpired(isOnLoginDestination = isOnLogin)) {
-                        is NavCommand.NavigateTo -> {
-                            navController.navigate(Login) {
-                                popUpTo(navController.graph.id) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        }
-                        NavCommand.Ignore, NavCommand.PopBackStack -> Unit
-                    }
+                    navController.applyCommand(AppNavTransitions.onSessionExpired(isOnLogin))
                 }
             }
         }
     }
 
-    NavHost(
+    val currentEntry by navController.currentBackStackEntryAsState()
+    val isInMain = currentEntry?.destination?.hierarchy?.any { it.hasRoute<MainGraph>() } == true
+    // Share Home's existing review badge/state across all tabs, scoped to this login session.
+    val mainEntry = if (isInMain) {
+        remember(currentEntry) { navController.getBackStackEntry(MainGraph) }
+    } else null
+    val homeViewModel = mainEntry?.let { hiltViewModel<HomeViewModel>(it) }
+    val homeState = homeViewModel?.uiState?.collectAsStateWithLifecycle()?.value
+    val startsInMain = startDestination == MainGraph ||
+        MainTab.entries.any { it.destination == startDestination }
+
+    MainScaffold(
         navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
-    ) {
-        composable<Login> {
-            LoginRoute(
-                onLoginSuccess = { selectedLevelId ->
-                    sessionEvents?.resetSession()
-                    val targetRoute: Any = when (routeAfterAuth(selectedLevelId)) {
-                        AuthDestination.SelectLevel -> SelectLevel
-                        AuthDestination.Home -> Home
-                    }
-                    navController.navigate(targetRoute) {
-                        popUpTo(Login) { inclusive = true }
-                        launchSingleTop = true
-                    }
+        modifier = modifier,
+        hasPracticeNotification = homeState?.hasPracticeNotification == true
+    ) { contentPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = if (startsInMain) MainGraph else AuthGraph,
+            modifier = Modifier.padding(contentPadding).consumeWindowInsets(contentPadding)
+        ) {
+            authGraph(
+                startDestination = if (startsInMain || startDestination == AuthGraph) Login else startDestination,
+                login = {
+                    LoginRoute(
+                        onLoginSuccess = { selectedLevelId ->
+                            sessionEvents?.resetSession()
+                            navController.applyCommand(AppNavTransitions.onLoginSuccess(selectedLevelId))
+                        },
+                        onRegisterClick = {
+                            navController.applyCommand(AppNavTransitions.onLoginRegisterClick())
+                        }
+                    )
                 },
-                onRegisterClick = {
-                    navController.navigate(Signup) {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-
-        composable<Signup> {
-            SignupRoute(
-                onSignupSuccess = {
-                    sessionEvents?.resetSession()
-                    navController.navigate(SelectLevel) {
-                        popUpTo(Login) { inclusive = true }
-                        launchSingleTop = true
-                    }
+                signup = {
+                    SignupRoute(
+                        onSignupSuccess = {
+                            sessionEvents?.resetSession()
+                            navController.applyCommand(AppNavTransitions.onSignupSuccess())
+                        },
+                        onNavigateToLogin = {
+                            navController.applyCommand(AppNavTransitions.onSignupBackToLogin())
+                        }
+                    )
                 },
-                onNavigateToLogin = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable<SelectLevel> {
-            SelectLevelRoute(
-                onNavigateNext = { _ ->
-                    navController.navigate(WelcomeSuccess) {
-                        popUpTo(SelectLevel) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-
-        composable<WelcomeSuccess> {
-            WelcomeSuccessScreen(
-                onContinueToLogin = {
-                    navController.navigate(Home) {
-                        popUpTo(WelcomeSuccess) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-
-        composable<Home> {
-            HomeRoute(
-                onNavigateToProfile = {
-                    navController.navigate(Profile) {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-
-        composable<Profile> {
-            ProfileRoute(
-                onNavigateToHome = {
-                    navController.navigate(Home) {
-                        popUpTo(Home) { inclusive = true }
-                        launchSingleTop = true
-                    }
+                selectLevel = {
+                    SelectLevelRoute(
+                        onNavigateNext = { confirmedLevelId ->
+                            // Keep the existing PUT /profile confirmation guard.
+                            if (confirmedLevelId.isNotBlank()) {
+                                navController.applyCommand(AppNavTransitions.onSelectLevelSuccess())
+                            }
+                        }
+                    )
                 },
-                onLoggedOut = {
-                    navController.navigate(Login) {
-                        popUpTo(navController.graph.id) { inclusive = true }
-                        launchSingleTop = true
+                welcomeSuccess = {
+                    WelcomeSuccessScreen(
+                        onContinueToLogin = {
+                            navController.applyCommand(AppNavTransitions.onWelcomeContinue())
+                        }
+                    )
+                },
+                forgotPassword = {
+                    ForgotPasswordRoute(onNavigateToLogin = { navController.popBackStack() })
+                }
+            )
+            mainGraph(
+                startDestination = MainTab.entries.firstOrNull { it.destination == startDestination }
+                    ?.destination ?: Home
+            ) { tab, entry ->
+                when (tab) {
+                    MainTab.HOME -> {
+                        val parent = remember(entry) { navController.getBackStackEntry(MainGraph) }
+                        HomeRoute(
+                            viewModel = hiltViewModel(parent),
+                            onNavigateToLesson = { navController.selectMainTab(MainTab.LESSON) },
+                            onNavigateToPractice = { navController.selectMainTab(MainTab.PRACTICE) },
+                            onNavigateToProfile = { navController.selectMainTab(MainTab.PROFILE) }
+                        )
                     }
+                    MainTab.LESSON -> LessonPlaceholderScreen()
+                    MainTab.PRACTICE -> PracticePlaceholderScreen()
+                    MainTab.PROFILE -> ProfileRoute(
+                        onLoggedOut = { navController.applyCommand(AppNavTransitions.onLogout()) }
+                    )
                 }
-            )
-        }
-
-        composable<ForgotPassword> {
-            ForgotPasswordRoute(
-                onNavigateToLogin = {
-                    navController.popBackStack()
-                }
-            )
+            }
         }
     }
 }

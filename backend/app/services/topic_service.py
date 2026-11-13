@@ -13,7 +13,10 @@ from app.schemas.enums import ContentStatus
 from app.schemas.lesson import LessonSummaryDto
 from app.schemas.topic import TopicDetailDto, TopicDto
 from app.services.content_constants import MAX_STARS_PER_TOPIC, ROUNDS_PER_TOPIC
-from app.services.level_progress_provider import get_user_level_progress
+from app.services.level_progress_provider import (
+    UserLevelProgress,
+    get_user_level_progress,
+)
 from sqlalchemy.orm import Session
 
 
@@ -55,12 +58,17 @@ def get_topic_states_for_level(
     db: Session,
     user_id: uuid.UUID,
     level_id: uuid.UUID,
+    *,
+    snapshot: UserLevelProgress | None = None,
 ) -> list[TopicState]:
     """Return every topic using the current user's centralized Level snapshot."""
-    user = UserRepository(db).get_by_id(user_id)
-    if user is None:
-        raise AppError(404, ErrorType.NOT_FOUND, "User not found")
-    snapshot = get_user_level_progress(db, user)
+    if snapshot is None:
+        user = UserRepository(db).get_by_id(user_id)
+        if user is None:
+            raise AppError(404, ErrorType.NOT_FOUND, "User not found")
+        snapshot = get_user_level_progress(db, user)
+    elif snapshot.user_id != user_id:
+        raise ValueError("Level progress snapshot must belong to the requested user")
     if level_id not in snapshot.statuses:
         raise AppError(404, ErrorType.NOT_FOUND, "Level not found")
     topics_repo = TopicRepository(db)
@@ -92,7 +100,10 @@ def get_topic_state(
 
 
 def _topic_dto(state: TopicState) -> TopicDto:
+    """Share Topic fields and temporary Round statistics across both endpoints."""
     topic = state.topic
+    # TODO(sprint-7): Replace placeholder round progress
+    # with values derived from user_round_progress.
     return TopicDto(
         id=topic.id, level_id=topic.level_id, name=topic.name, description=topic.description,
         order_index=topic.order_index, status=state.status, stars=state.stars,
@@ -102,7 +113,7 @@ def _topic_dto(state: TopicState) -> TopicDto:
 
 
 def list_topics(db: Session, user_id: uuid.UUID, level_id: uuid.UUID) -> list[TopicDto]:
-    """Return topic DTOs with Round statistics deferred until Sprint 5."""
+    """Return topic DTOs with Round statistics deferred until Sprint 7."""
     return [_topic_dto(state) for state in get_topic_states_for_level(db, user_id, level_id)]
 
 

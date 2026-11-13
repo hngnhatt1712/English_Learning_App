@@ -7,6 +7,12 @@ import kotlinx.serialization.Serializable
  * Splash route is intentionally deferred to a subsequent task.
  */
 @Serializable
+data object AuthGraph
+
+@Serializable
+data object MainGraph
+
+@Serializable
 data object Login
 
 @Serializable
@@ -20,6 +26,12 @@ data object WelcomeSuccess
 
 @Serializable
 data object Home
+
+@Serializable
+data object Lesson
+
+@Serializable
+data object Practice
 
 @Serializable
 data object Profile
@@ -88,29 +100,26 @@ object AppNavTransitions {
     fun onSignupBackToLogin(): NavCommand = NavCommand.PopBackStack
 
     /**
-     * Login -> success: route via [routeAfterAuth] and pop [Login] (`inclusive = true`).
+     * Enter onboarding or MainGraph using the server-confirmed level; discard Auth history.
      */
     fun onLoginSuccess(selectedLevelId: String?): NavCommand.NavigateTo {
         val target: Any = when (routeAfterAuth(selectedLevelId)) {
             AuthDestination.SelectLevel -> SelectLevel
-            AuthDestination.Home -> Home
+            AuthDestination.Home -> MainGraph
         }
         return NavCommand.NavigateTo(
             destination = target,
-            popUpToRoute = Login,
-            popUpToInclusive = true,
+            clearEntireBackStack = true,
             launchSingleTop = true
         )
     }
 
     /**
-     * Signup -> success: always navigate to [SelectLevel] and pop [Login] (`inclusive = true`),
-     * removing both [Signup] and [Login] from the back stack. Does NOT call [routeAfterAuth].
+     * Signup always enters SelectLevel with no stale Login/Signup back stack.
      */
     fun onSignupSuccess(): NavCommand.NavigateTo = NavCommand.NavigateTo(
         destination = SelectLevel,
-        popUpToRoute = Login,
-        popUpToInclusive = true,
+        clearEntireBackStack = true,
         launchSingleTop = true
     )
 
@@ -122,12 +131,17 @@ object AppNavTransitions {
         launchSingleTop = true
     )
 
-    /** WelcomeSuccess -> primary continue action: navigate to [Home] and pop [WelcomeSuccess] (`inclusive = true`). */
+    /** WelcomeSuccess -> MainGraph/Home, removing the complete Auth/onboarding graph. */
     fun onWelcomeContinue(): NavCommand.NavigateTo = NavCommand.NavigateTo(
-        destination = Home,
-        popUpToRoute = WelcomeSuccess,
-        popUpToInclusive = true,
+        destination = MainGraph,
+        clearEntireBackStack = true,
         launchSingleTop = true
+    )
+
+    /** Local auth state is cleared by the existing logout flow before this command runs. */
+    fun onLogout(): NavCommand.NavigateTo = NavCommand.NavigateTo(
+        destination = Login,
+        clearEntireBackStack = true
     )
 
     /**

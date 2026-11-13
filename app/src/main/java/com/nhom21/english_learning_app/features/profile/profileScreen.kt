@@ -19,10 +19,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,7 +65,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -82,7 +81,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.nhom21.english_learning_app.BuildConfig
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.core.ui.components.Owla3DButton
-import com.nhom21.english_learning_app.features.home.HomeTab
 import com.nhom21.english_learning_app.ui.theme.Baloo2
 import com.nhom21.english_learning_app.ui.theme.OwlaColors
 import com.nhom21.english_learning_app.ui.theme.Quicksand
@@ -94,7 +92,6 @@ import com.nhom21.english_learning_app.ui.theme.Quicksand
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     uiState: ProfileUiState = ProfileUiState(),
-    onTabSelected: (HomeTab) -> Unit = {},
     onNavigateToStatistics: () -> Unit = {},
     onEditUsernameClick: () -> Unit = {},
     onChangePasswordClick: () -> Unit = {},
@@ -126,14 +123,8 @@ fun ProfileScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = backgroundColor,
+        contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            ProfileBottomBar(
-                selectedTab = uiState.selectedTab,
-                onTabSelected = onTabSelected,
-                isDark = isDark
-            )
-        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -1122,104 +1113,6 @@ private fun sendEmailIntent(
     }
 }
 
-/**
- * Bottom Navigation Bar dùng chung cho trang Profile.
- */
-@Composable
-private fun ProfileBottomBar(
-    selectedTab: HomeTab,
-    onTabSelected: (HomeTab) -> Unit,
-    isDark: Boolean
-) {
-    val barBackground = if (isDark) OwlaColors.DarkSurface else Color.White
-    val border = if (isDark) OwlaColors.DarkBorder else OwlaColors.LightBorder
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = barBackground,
-        border = BorderStroke(1.dp, border),
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ProfileNavItem(
-                modifier = Modifier.weight(1f),
-                iconRes = R.drawable.ic_home,
-                label = "Home",
-                isSelected = selectedTab == HomeTab.HOME,
-                onClick = { onTabSelected(HomeTab.HOME) }
-            )
-
-            ProfileNavItem(
-                modifier = Modifier.weight(1f),
-                iconRes = R.drawable.ic_lesson,
-                label = "Lesson",
-                isSelected = selectedTab == HomeTab.LESSON,
-                onClick = { onTabSelected(HomeTab.LESSON) }
-            )
-
-            ProfileNavItem(
-                modifier = Modifier.weight(1f),
-                iconRes = R.drawable.ic_practice,
-                label = "Practice",
-                isSelected = selectedTab == HomeTab.PRACTICE,
-                onClick = { onTabSelected(HomeTab.PRACTICE) }
-            )
-
-            ProfileNavItem(
-                modifier = Modifier.weight(1f),
-                iconRes = R.drawable.ic_profile,
-                label = "Profile",
-                isSelected = selectedTab == HomeTab.PROFILE,
-                onClick = { onTabSelected(HomeTab.PROFILE) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProfileNavItem(
-    iconRes: Int,
-    label: String,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val activeColor = OwlaColors.PrimaryBase
-    val inactiveColor = Color(0xFF7B8B9A)
-
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-            .padding(vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = label,
-            tint = Color.Unspecified,
-            modifier = Modifier
-                .size(26.dp)
-                .alpha(if (isSelected) 1f else 0.55f)
-        )
-
-        Text(
-            text = label,
-            fontFamily = Baloo2,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            fontSize = 13.sp,
-            color = if (isSelected) activeColor else inactiveColor
-        )
-    }
-}
-
 // ---------------------------------------------------------------------------
 // PREVIEWS & ROUTE
 // ---------------------------------------------------------------------------
@@ -1247,9 +1140,6 @@ fun ProfileScreenDarkModePreview() {
 fun ProfileRoute(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
-    onNavigateToHome: () -> Unit = {},
-    onNavigateToLesson: () -> Unit = {},
-    onNavigateToPractice: () -> Unit = {},
     onNavigateToStatistics: () -> Unit = {},
     onLoggedOut: () -> Unit = {}
 ) {
@@ -1258,14 +1148,6 @@ fun ProfileRoute(
     ProfileScreen(
         modifier = modifier,
         uiState = uiState,
-        onTabSelected = { tab ->
-            when (tab) {
-                HomeTab.HOME -> onNavigateToHome()
-                HomeTab.LESSON -> onNavigateToLesson()
-                HomeTab.PRACTICE -> onNavigateToPractice()
-                HomeTab.PROFILE -> {}
-            }
-        },
         onNavigateToStatistics = onNavigateToStatistics,
         onEditUsernameClick = { viewModel.onOpenEditUsernameDialog() },
         onChangePasswordClick = { viewModel.onOpenChangePasswordDialog() },
