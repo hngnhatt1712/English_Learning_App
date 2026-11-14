@@ -42,4 +42,29 @@
     <string name="forgot_password_msg_otp_sent">Mã OTP đã được gửi thành công!</string>
     <string name="forgot_password_msg_otp_resent">Mã OTP mới đã được gửi lại!</string>
     <string name="forgot_password_msg_reset_success">Mật khẩu của bạn đã được đặt lại thành công!</string>
+    <!-- Lesson path -->
+    <string name="lesson_loading">Owla đang chuẩn bị bài học…</string>
+    <string name="lesson_empty">Chưa có bài học cho Level này.</string>
+    <string name="lesson_try_again">Thử lại</string>
+    <string name="lesson_error_network">Không có kết nối. Kiểm tra mạng rồi thử lại.</string>
+    <string name="lesson_error_server">Máy chủ đang bận. Thử lại sau ít phút.</string>
+    <string name="lesson_error_unknown">Chưa tải được bài học. Hãy thử lại.</string>
+    <string name="lesson_level_locked">Level này chưa được mở.</string>
+    <string name="lesson_topic_locked">Topic này chưa được mở.</string>
+    <string name="lesson_topic_label">Topic %1$d</string>
+    <string name="lesson_round_completed">đã hoàn thành</string>
+    <string name="lesson_round_current">đang học</string>
+    <string name="lesson_round_locked">đang khoá</string>
+    <string name="lesson_round_description">Round %1$d, %2$s, %3$s, %4$d trên 3 sao</string>
+    <string name="lesson_unlock_previous_round">Hoàn thành Round %1$d để mở</string>
+    <string name="lesson_unlock_previous_topic">Hoàn thành Topic trước để mở</string>
+    <string name="lesson_best_stars">Sao tốt nhất: %1$d/3</string>
+    <string name="lesson_start">Bắt đầu</string>
+    <string name="lesson_retry">Làm lại</string>
+    <string name="lesson_round_coming_soon">Nội dung Round sẽ sẵn sàng khi dữ liệu bài học được cập nhật.</string>
+    <string name="lesson_round_learn">Học từ mới</string>
+    <string name="lesson_round_recognition">Nhận biết</string>
+    <string name="lesson_round_matching">Ghép cặp</string>
+    <string name="lesson_round_application">Vận dụng</string>
+    <string name="lesson_round_final_review">Ôn tập cuối</string>
 </resources>
