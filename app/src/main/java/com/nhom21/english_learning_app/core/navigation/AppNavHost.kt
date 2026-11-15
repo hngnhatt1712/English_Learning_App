@@ -26,7 +26,7 @@ import com.nhom21.english_learning_app.features.auth.SignupRoute
 import com.nhom21.english_learning_app.features.auth.WelcomeSuccessScreen
 import com.nhom21.english_learning_app.features.home.HomeRoute
 import com.nhom21.english_learning_app.features.home.HomeViewModel
-import com.nhom21.english_learning_app.features.lesson.LessonPlaceholderScreen
+import com.nhom21.english_learning_app.features.lesson.LessonRoute
 import com.nhom21.english_learning_app.features.practice.PracticePlaceholderScreen
 import com.nhom21.english_learning_app.features.profile.ProfileRoute
 
@@ -139,7 +139,7 @@ fun AppNavHost(
                             onNavigateToProfile = { navController.selectMainTab(MainTab.PROFILE) }
                         )
                     }
-                    MainTab.LESSON -> LessonPlaceholderScreen()
+                    MainTab.LESSON -> LessonRoute()
                     MainTab.PRACTICE -> PracticePlaceholderScreen()
                     MainTab.PROFILE -> ProfileRoute(
                         onLoggedOut = { navController.applyCommand(AppNavTransitions.onLogout()) }
