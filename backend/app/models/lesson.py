@@ -1,5 +1,6 @@
 """Lesson model: lessons belonging to a topic (contract D11, 6.5)."""
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     CheckConstraint,
@@ -10,9 +11,12 @@ from sqlalchemy import (
     UniqueConstraint,
     Uuid,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+
+if TYPE_CHECKING:
+    from app.models.activity import Activity
 
 
 class Lesson(Base):
@@ -33,6 +37,10 @@ class Lesson(Base):
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     order_index: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    activities: Mapped[list["Activity"]] = relationship(
+        back_populates="lesson", passive_deletes="all", order_by="Activity.round_number",
+    )
 
     def __repr__(self) -> str:
         return f"<Lesson(id={self.id}, title='{self.title}', order_index={self.order_index})>"
