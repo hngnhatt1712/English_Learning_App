@@ -3,7 +3,6 @@ package com.nhom21.english_learning_app.core.ui.components
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +32,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nhom21.english_learning_app.R
@@ -41,8 +42,9 @@ import com.nhom21.english_learning_app.ui.theme.Baloo2
 import com.nhom21.english_learning_app.ui.theme.OwlaColors
 
 object OwlaBottomBarDefaults {
-    // owla-design-system §3.1: Deep Teal. Color.kt has no equivalent token yet.
+    // Deep Teal is readable on light surfaces; use the original Primary on dark.
     val SelectedColor = Color(0xFF036268)
+    val DarkSelectedColor = OwlaColors.PrimaryBase
 }
 
 /** Stateless four-tab navigation. MainScaffold owns route and selection state. */
@@ -56,13 +58,13 @@ fun OwlaBottomBar(
     val isDark = isSystemInDarkTheme()
     val surface = if (isDark) OwlaColors.DarkSurface else OwlaColors.LightSurface
     val border = if (isDark) OwlaColors.DarkBorder else OwlaColors.LightBorder
-    // Keep unselected icons/labels legible rather than dimming the source art with alpha.
-    val inactive = if (isDark) OwlaColors.DarkTextPrimary else OwlaColors.LightTextPrimary
+    val active = if (isDark) OwlaBottomBarDefaults.DarkSelectedColor else OwlaBottomBarDefaults.SelectedColor
+    val inactive = if (isDark) OwlaColors.DarkTextSecondary else OwlaColors.LightTextSecondary
 
     Surface(
         modifier = modifier.fillMaxWidth().testTag("OwlaBottomBar"),
         color = surface,
-        border = BorderStroke(2.dp, border)
+        border = BorderStroke(1.dp, border)
     ) {
         Row(
             modifier = Modifier
@@ -70,13 +72,12 @@ fun OwlaBottomBar(
                 .navigationBarsPadding()
                 .heightIn(min = 64.dp)
                 .selectableGroup()
-                .padding(horizontal = 4.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             MainTab.entries.forEach { tab ->
                 val selected = tab == selectedTab
-                val color = if (selected) OwlaBottomBarDefaults.SelectedColor else inactive
+                val color = if (selected) active else inactive
                 val shape = RoundedCornerShape(12.dp)
                 val hasBadge = tab == MainTab.PRACTICE && hasPracticeNotification
                 Column(
@@ -84,9 +85,6 @@ fun OwlaBottomBar(
                         .weight(1f)
                         .heightIn(min = 48.dp)
                         .clip(shape)
-                        // A light neutral backing keeps Deep Teal readable in dark mode too.
-                        .background(if (selected) OwlaColors.LightBackground else Color.Transparent)
-                        .border(2.dp, if (selected) color else Color.Transparent, shape)
                         .selectable(
                             selected = selected,
                             role = Role.Tab,
@@ -103,13 +101,13 @@ fun OwlaBottomBar(
                         Icon(
                             painter = painterResource(tab.iconRes),
                             contentDescription = null, // The parent tab exposes its visible label.
-                            tint = color,
+                            tint = Color.Unspecified,
                             modifier = Modifier.size(26.dp)
                         )
                         if (hasBadge) {
                             Box(
                                 Modifier.size(8.dp).align(Alignment.TopEnd)
-                                    .background(OwlaColors.AccentBase, CircleShape)
+                                    .background(OwlaColors.DangerBase, CircleShape)
                             )
                         }
                     }
@@ -134,7 +132,7 @@ internal val MainTab.label: String
         MainTab.PROFILE -> "Profile"
     }
 
-private val MainTab.iconRes: Int
+internal val MainTab.iconRes: Int
     get() = when (this) {
         MainTab.HOME -> R.drawable.ic_home
         MainTab.LESSON -> R.drawable.ic_lesson
@@ -143,13 +141,14 @@ private val MainTab.iconRes: Int
     }
 
 @Preview(showBackground = true, widthDp = 320, fontScale = 1.3f)
-@Composable
-private fun OwlaBottomBarPreview() {
-    OwlaBottomBar(MainTab.HOME, {}, hasPracticeNotification = true)
-}
-
 @Preview(showBackground = true, widthDp = 320, fontScale = 1.3f, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun OwlaBottomBarDarkPreview() {
-    OwlaBottomBar(MainTab.PROFILE, {})
+private fun OwlaBottomBarPreview(
+    @PreviewParameter(MainTabPreviewProvider::class) selectedTab: MainTab
+) {
+    OwlaBottomBar(selectedTab, {}, hasPracticeNotification = true)
+}
+
+internal class MainTabPreviewProvider : PreviewParameterProvider<MainTab> {
+    override val values = MainTab.entries.asSequence()
 }

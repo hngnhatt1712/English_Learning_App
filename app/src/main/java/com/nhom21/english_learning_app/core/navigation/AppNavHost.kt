@@ -90,6 +90,11 @@ fun AppNavHost(
                         },
                         onRegisterClick = {
                             navController.applyCommand(AppNavTransitions.onLoginRegisterClick())
+                        },
+                        onForgotPasswordClick = {
+                            navController.navigate(ForgotPassword) {
+                                launchSingleTop = true
+                            }
                         }
                     )
                 },

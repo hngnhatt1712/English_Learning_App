@@ -1,10 +1,15 @@
 """Model User đại diện cho người dùng của hệ thống."""
 import uuid
 from datetime import date, datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Uuid, func, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Uuid, func, text
-from sqlalchemy.orm import Mapped, mapped_column
+
+if TYPE_CHECKING:
+    from app.models.progress import UserRoundProgress, UserVocabularyProgress
 
 
 class User(Base):
@@ -33,6 +38,14 @@ class User(Base):
     last_learning_date: Mapped[date | None] = mapped_column(Date, nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    # The database owns CASCADE deletion, including when children are already loaded.
+    round_progress: Mapped[list["UserRoundProgress"]] = relationship(
+        back_populates="user", passive_deletes="all",
+    )
+    vocabulary_progress: Mapped[list["UserVocabularyProgress"]] = relationship(
+        back_populates="user", passive_deletes="all",
     )
 
     def __repr__(self) -> str:

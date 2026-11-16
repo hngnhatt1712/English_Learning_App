@@ -18,10 +18,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -139,6 +142,7 @@ fun SelectLevelScreen(
                     )
                     Owla3DButton(text = "Thử lại", onClick = onRetry)
                 } else uiState.levels.forEach { option ->
+                    val presentation = levelCardPresentation(option)
                     val isSelected = uiState.selectedLevelId == option.id
 
                     val cardBorder = if (isSelected) {
@@ -162,7 +166,10 @@ fun SelectLevelScreen(
                         shadowElevation = if (isSelected) 2.dp else 0.dp
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 80.dp)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
@@ -170,6 +177,7 @@ fun SelectLevelScreen(
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
+                                    .widthIn(max = 104.dp)
                                     .background(
                                         color = OwlaColors.PrimaryBase.copy(alpha = 0.12f),
                                         shape = CircleShape
@@ -184,11 +192,13 @@ fun SelectLevelScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = option.name,
+                                    text = presentation.label,
                                     fontFamily = Baloo2,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
-                                    color = if (isDark) OwlaColors.DarkTextPrimary else Color(0xFF134E45)
+                                    color = if (isDark) OwlaColors.DarkTextPrimary else Color(0xFF134E45),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
@@ -202,12 +212,14 @@ fun SelectLevelScreen(
 
                             // Mô tả trình độ
                             Text(
-                                text = option.description.orEmpty(),
+                                text = presentation.description,
                                 fontFamily = Quicksand,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 15.sp,
                                 color = textPrimary,
                                 lineHeight = 20.sp,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -239,6 +251,32 @@ fun SelectLevelScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
+
+private data class LevelCardPresentation(val label: String, val description: String)
+
+private val knownCefrCode = Regex(
+    """(?<![\p{L}\p{N}])(A1|A2|B1)(?![\p{L}\p{N}])""",
+    RegexOption.IGNORE_CASE
+)
+
+/** Adapts display copy only; selection and submission keep the original level UUID. */
+private fun levelCardPresentation(level: Level): LevelCardPresentation {
+    val code = knownCefrCode.findAll(level.name)
+        .map { it.value.uppercase() }
+        .distinct()
+        .singleOrNull()
+    val description = when (code) {
+        "A1" -> "I just started learning English"
+        "A2" -> "I know some words and phrases"
+        "B1" -> "I can have a simple conversation"
+        else -> level.description.orEmpty().replace(Regex("""\s+"""), " ").trim()
+            .ifBlank { "Choose this level" }
+    }
+    return LevelCardPresentation(
+        label = code ?: level.name.trim().ifBlank { "Level" },
+        description = description
+    )
 }
 
 /**
