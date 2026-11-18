@@ -6,12 +6,18 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Protocol
 
+from app.models.activity import Activity
+from app.models.lesson import Lesson
 from app.models.level import Level
+from app.models.progress import UserRoundProgress, UserVocabularyProgress
+from app.models.topic import Topic
 from app.models.user import User
+from app.models.vocabulary import Vocabulary
 from app.repositories.level_repository import LevelRepository
 from app.repositories.topic_repository import LevelTopicProgress, TopicRepository
 from app.schemas.enums import ContentStatus
 from app.services.content_constants import MAX_STARS_PER_TOPIC
+from sqlalchemy import select, union
 from sqlalchemy.orm import Session
 
 
@@ -103,6 +109,8 @@ def build_level_progress(
     levels: Sequence[Level],
     topic_counts: Mapping[uuid.UUID, int],
     progress_totals: Mapping[uuid.UUID, LevelTopicProgress],
+    *,
+    content_progress_level_ids: AbstractSet[uuid.UUID] = frozenset(),
 ) -> UserLevelProgress:
     """Build a snapshot from already user-filtered aggregates, without I/O."""
     ordered = tuple(
@@ -111,7 +119,7 @@ def build_level_progress(
     )
     stats: dict[uuid.UUID, LevelProgressStats] = {}
     completed: set[uuid.UUID] = set()
-    with_progress: set[uuid.UUID] = set()
+    with_progress = set(content_progress_level_ids)
     for level in ordered:
         count = topic_counts.get(level.id, 0)
         progress = progress_totals.get(level.id, LevelTopicProgress(0, 0, 0))
@@ -134,11 +142,34 @@ def get_user_level_progress(
     *,
     level_repo: LevelRepository | None = None,
 ) -> UserLevelProgress:
-    """Read three batches regardless of Level count; never write or cache data."""
+    """Read four fixed batches; D22 evidence never changes Topic aggregates.
+
+    Any Round/Vocabulary progress row qualifies, including locked/new rows.
+    Vocabulary.level_id is consistent with its Topic via the composite DB FK.
+    Keep the Sprint 4 Topic fallback until Sprint 7 data equivalence is verified.
+    """
     levels = (level_repo if level_repo is not None else LevelRepository(db)).get_all()
     topics = TopicRepository(db)
     counts = topics.get_counts_by_level()
-    # TODO(sprint-5): Include round and vocabulary progress sources
-    # when their models and repositories become available.
     progress = topics.get_progress_totals_by_level(user.id)
-    return build_level_progress(user.id, user.selected_level_id, levels, counts, progress)
+    round_levels = (
+        select(Topic.level_id)
+        .select_from(UserRoundProgress)
+        .join(Activity, UserRoundProgress.round_id == Activity.id)
+        .join(Lesson, Activity.lesson_id == Lesson.id)
+        .join(Topic, Lesson.topic_id == Topic.id)
+        .where(UserRoundProgress.user_id == user.id)
+    )
+    vocabulary_levels = (
+        select(Vocabulary.level_id)
+        .select_from(UserVocabularyProgress)
+        .join(Vocabulary, UserVocabularyProgress.vocabulary_id == Vocabulary.id)
+        .where(UserVocabularyProgress.user_id == user.id)
+    )
+    # UNION deduplicates across rows and sources without joining progress tables
+    # together, so neither stored stars nor completed Topic counts can multiply.
+    content_progress = frozenset(db.scalars(union(round_levels, vocabulary_levels)))
+    return build_level_progress(
+        user.id, user.selected_level_id, levels, counts, progress,
+        content_progress_level_ids=content_progress,
+    )
