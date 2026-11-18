@@ -2,6 +2,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
+from app.database.base import Base
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
@@ -12,8 +13,6 @@ from sqlalchemy import (
     Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.database.base import Base
 
 if TYPE_CHECKING:
     from app.models.level import Level
@@ -48,10 +47,10 @@ class Vocabulary(Base):
     word: Mapped[str] = mapped_column(Text, nullable=False)
     meaning: Mapped[str] = mapped_column(Text, nullable=False)
     part_of_speech: Mapped[str] = mapped_column(String(20), nullable=False)
-    phonetic: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    phonetic: Mapped[str] = mapped_column(Text, nullable=False)
     example: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
-    audio_url: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    audio_url: Mapped[str] = mapped_column(Text, nullable=False)
     # No difficulty scale/type is specified yet. Preserve an optional opaque label,
     # with no default or domain CHECK; it is not a VocabularyDto field.
     difficulty: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
