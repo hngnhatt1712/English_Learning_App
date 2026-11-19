@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -68,14 +69,16 @@ internal fun RoundPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    neutralWhenDisabled: Boolean = false,
     leadingIcon: (@Composable () -> Unit)? = null
 ) {
     val colors = roundColors()
+    val neutral = neutralWhenDisabled && !enabled
     Owla3DButton(
         label, onClick, modifier,
-        baseColor = colors.primaryFace,
-        shadowColor = colors.primaryBase,
-        textColor = colors.primaryLabel,
+        baseColor = if (neutral) lerp(colors.surface, colors.ink, 0.28f) else colors.primaryFace,
+        shadowColor = if (neutral) lerp(colors.border, colors.ink, 0.30f) else colors.primaryBase,
+        textColor = if (neutral) colors.ink else colors.primaryLabel,
         enabled = enabled,
         height = 60.dp,
         pressDepth = 6.dp,

@@ -96,7 +96,7 @@ internal fun RoundCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier
 @Composable
 internal fun RoundHeading(
     title: String,
-    subtitle: String,
+    subtitle: String?,
     onExit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -105,7 +105,9 @@ internal fun RoundHeading(
         RoundCloseButton(onExit)
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(title, color = colors.accentInk, style = OwlaType.h1, textAlign = TextAlign.Center)
-            Text(subtitle, color = colors.ink, style = RoundCaption, textAlign = TextAlign.Center)
+            if (subtitle != null) {
+                Text(subtitle, color = colors.ink, style = RoundCaption, textAlign = TextAlign.Center)
+            }
         }
         Box(Modifier.width(48.dp))
     }
@@ -113,9 +115,25 @@ internal fun RoundHeading(
 
 @Composable
 internal fun RoundWordProgress(processed: Int, total: Int, modifier: Modifier = Modifier) {
+    RoundProgress(
+        processed = processed,
+        total = total,
+        caption = stringResource(R.string.round_words_progress, processed, total),
+        progressLabel = stringResource(R.string.round_progress_label),
+        modifier = modifier
+    )
+}
+
+@Composable
+internal fun RoundProgress(
+    processed: Int,
+    total: Int,
+    caption: String,
+    progressLabel: String,
+    modifier: Modifier = Modifier
+) {
     val colors = roundColors()
     val fraction = if (total > 0) (processed.toFloat() / total).coerceIn(0f, 1f) else 0f
-    val progressLabel = stringResource(R.string.round_progress_label)
     Column(
         modifier.widthIn(max = 520.dp).fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -169,7 +187,7 @@ internal fun RoundWordProgress(processed: Int, total: Int, modifier: Modifier = 
             }
         }
         Text(
-            stringResource(R.string.round_words_progress, processed, total),
+            caption,
             style = RoundCaption,
             color = colors.accentInk,
             textAlign = TextAlign.Center

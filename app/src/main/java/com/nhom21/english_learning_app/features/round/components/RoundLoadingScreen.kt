@@ -1,5 +1,6 @@
 package com.nhom21.english_learning_app.features.round.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,7 +38,8 @@ fun RoundLoadingScreen(
     onRequestExit: () -> Unit,
     modifier: Modifier = Modifier,
     message: String = stringResource(R.string.round_loading),
-    description: String = stringResource(R.string.round_get_ready)
+    description: String = stringResource(R.string.round_get_ready),
+    @DrawableRes mascot: Int = R.drawable.ic_owla
 ) {
     val colors = roundColors()
     BoxWithConstraints(modifier.fillMaxSize().background(colors.background)) {
@@ -50,7 +52,7 @@ fun RoundLoadingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
             ) {
-                RoundMascot(R.drawable.ic_owla, Modifier.size(208.dp), imagePadding = 24.dp)
+                RoundMascot(mascot, Modifier.size(208.dp), imagePadding = 24.dp)
                 Text(message, style = OwlaType.display, color = colors.accentInk, textAlign = TextAlign.Center)
                 LinearProgressIndicator(
                     modifier = Modifier.widthIn(max = 280.dp).fillMaxWidth().height(12.dp).clip(CircleShape),
