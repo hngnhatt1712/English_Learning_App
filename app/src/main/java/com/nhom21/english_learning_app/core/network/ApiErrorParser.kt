@@ -33,22 +33,7 @@ class ApiErrorParser @Inject constructor(
             val envelope = json.decodeFromString<ApiResponse<Unit>>(body)
             val errorBody = envelope.error
             if (errorBody != null) {
-                val errorType = ApiErrorType.fromWire(errorBody.type)
-                val message = errorBody.detail ?: envelope.message
-                val fieldErrors = errorBody.errors?.mapNotNull { item ->
-                    val field = item.field
-                    val msg = item.message
-                    if (field != null && msg != null) {
-                        FieldError(field = field, message = msg, code = item.code)
-                    } else null
-                } ?: emptyList()
-
-                return ApiFailure(
-                    type = errorType,
-                    message = message,
-                    fieldErrors = fieldErrors,
-                    httpStatus = httpStatus
-                )
+                return fromEnvelope(errorBody, envelope.message, httpStatus)
             }
 
             // Envelope present but error field is null
@@ -94,4 +79,19 @@ class ApiErrorParser @Inject constructor(
             httpStatus = httpStatus
         )
     }
+
+    internal fun fromEnvelope(error: ApiErrorBody, message: String, httpStatus: Int?): ApiFailure =
+        ApiFailure(
+            type = ApiErrorType.fromWire(error.type),
+            message = error.detail ?: message,
+            fieldErrors = error.errors.orEmpty().mapNotNull { item ->
+                val field = item.field
+                val fieldMessage = item.message
+                if (field != null && fieldMessage != null) {
+                    FieldError(field, fieldMessage, item.code)
+                } else null
+            },
+            httpStatus = httpStatus,
+            traceId = error.traceId,
+        )
 }

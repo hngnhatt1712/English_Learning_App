@@ -1,0 +1,25 @@
+"""Stateless per-question feedback; no progress or streak writes."""
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Path
+
+from app.core.dependencies import CurrentUser, RoundServiceDep
+from app.core.schemas import ApiResponse, ok
+from app.schemas.question import CheckAnswerRequest, QuestionResultDto
+
+router = APIRouter(prefix="/questions", tags=["questions"])
+
+
+@router.post("/{questionId}/check", response_model=ApiResponse[QuestionResultDto], responses={
+    401: {"model": ApiResponse[None], "description": "unauthorized"},
+    403: {"model": ApiResponse[None], "description": "round-locked; unavailable sources fail closed (forbidden)"},
+    404: {"model": ApiResponse[None], "description": "not-found"},
+    422: {"model": ApiResponse[None], "description": "validation-error"},
+    500: {"model": ApiResponse[None], "description": "internal-error"},
+})
+def check_answer(
+    question_id: Annotated[UUID, Path(alias="questionId")], body: CheckAnswerRequest,
+    user: CurrentUser, service: RoundServiceDep,
+):
+    return ok(service.check_answer(user, question_id, body))

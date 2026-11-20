@@ -15,5 +15,6 @@ data class ApiFailure(
     val type: ApiErrorType,
     val message: String,
     val fieldErrors: List<FieldError> = emptyList(),
-    val httpStatus: Int? = null
+    val httpStatus: Int? = null,
+    val traceId: String? = null
 )

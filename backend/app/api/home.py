@@ -1,16 +1,11 @@
 """Authenticated draft Home endpoint (contract section 7.9)."""
-from typing import Annotated
+from fastapi import APIRouter
 
-from app.core.dependencies import CurrentUser
+from app.core.dependencies import CurrentUser, HomeServiceDep
 from app.core.schemas import ApiResponse, ok
-from app.database.session import get_db
 from app.schemas.home import HomeDto
-from app.services import home_service
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/home", tags=["Home"])
-DbSession = Annotated[Session, Depends(get_db)]
 
 
 @router.get(
@@ -23,5 +18,5 @@ DbSession = Annotated[Session, Depends(get_db)]
         500: {"model": ApiResponse[None], "description": "internal-error"},
     },
 )
-def get_home(user: CurrentUser, db: DbSession) -> dict[str, object]:
-    return ok(home_service.get_home(db, user))
+def get_home(user: CurrentUser, service: HomeServiceDep) -> dict[str, object]:
+    return ok(service.get_home(user))
