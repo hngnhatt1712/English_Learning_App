@@ -1,0 +1,160 @@
+"""Server-only JSONB schemas, selected by Question.type (never stored in payload)."""
+from typing import Annotated, Literal, Self
+from uuid import UUID
+
+from pydantic import AfterValidator, ConfigDict, Field, model_validator
+
+from app.core.schemas import CamelModel
+from app.utils.media import validate_media_path
+
+Identifier = Annotated[str, Field(min_length=1)]
+NonEmptyText = Annotated[str, Field(min_length=1)]
+MediaPath = Annotated[str, AfterValidator(validate_media_path)]
+
+
+class PayloadModel(CamelModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class TextOption(PayloadModel):
+    id: Identifier
+    text: NonEmptyText
+
+
+class PictureOption(PayloadModel):
+    id: Identifier
+    image_url: MediaPath
+
+
+class MatchingItem(PayloadModel):
+    id: Identifier
+    text: str | None = None
+    image_url: MediaPath | None = None
+
+    @model_validator(mode="after")
+    def content_present(self) -> Self:
+        if not self.text and not self.image_url:
+            raise ValueError("Matching item needs text or an image")
+        return self
+
+
+class Pair(PayloadModel):
+    left_id: Identifier
+    right_id: Identifier
+
+
+def unique_ids(items: list[TextOption] | list[PictureOption] | list[MatchingItem]) -> set[str]:
+    ids = {item.id for item in items}
+    if len(ids) != len(items):
+        raise ValueError("Item IDs must be unique")
+    return ids
+
+
+class LearnCardPayload(PayloadModel):
+    vocabulary_id: UUID
+
+
+class TextChoicePayload(PayloadModel):
+    options: list[TextOption] = Field(min_length=1)
+    correct_option_id: Identifier
+
+    @model_validator(mode="after")
+    def valid_answer(self) -> Self:
+        if self.correct_option_id not in unique_ids(self.options):
+            raise ValueError("Correct option must belong to options")
+        return self
+
+
+class PictureChoicePayload(PayloadModel):
+    options: list[PictureOption] = Field(min_length=1)
+    correct_option_id: Identifier
+
+    @model_validator(mode="after")
+    def valid_answer(self) -> Self:
+        if self.correct_option_id not in unique_ids(self.options):
+            raise ValueError("Correct option must belong to options")
+        return self
+
+
+class SentenceCompletionPayload(TextChoicePayload):
+    sentence: NonEmptyText
+
+    @model_validator(mode="after")
+    def has_blank(self) -> Self:
+        if "___" not in self.sentence:
+            raise ValueError("Sentence must contain ___")
+        return self
+
+
+class MatchingPayload(PayloadModel):
+    left: list[MatchingItem] = Field(min_length=1)
+    right: list[MatchingItem] = Field(min_length=1)
+    correct_pairs: list[Pair] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def valid_pairs(self) -> Self:
+        left, right = unique_ids(self.left), unique_ids(self.right)
+        if (
+            len(self.correct_pairs) != len(left)
+            or {pair.left_id for pair in self.correct_pairs} != left
+            or any(pair.right_id not in right for pair in self.correct_pairs)
+        ):
+            raise ValueError("Correct pairs must cover left exactly and reference right")
+        return self
+
+
+class FillBlankPayload(PayloadModel):
+    sentence: NonEmptyText
+    word_bank: list[str] | None
+    accepted_answers: list[NonEmptyText] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def has_blank(self) -> Self:
+        if "___" not in self.sentence or any(not text.strip() for text in self.accepted_answers):
+            raise ValueError("Sentence needs ___ and accepted answers must be nonempty")
+        return self
+
+
+class SentenceOrderPayload(PayloadModel):
+    tokens: list[TextOption] = Field(min_length=1)
+    accepted_sequences: list[list[Identifier]] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def valid_sequences(self) -> Self:
+        ids = unique_ids(self.tokens)
+        if any(len(sequence) != len(ids) or set(sequence) != ids for sequence in self.accepted_sequences):
+            raise ValueError("Every accepted sequence must use exactly the token IDs")
+        return self
+
+
+class TranslatePayload(SentenceOrderPayload):
+    source_text: NonEmptyText
+    direction: Literal["en_to_vi", "vi_to_en"]
+
+
+QuestionPayload = (
+    LearnCardPayload | TextChoicePayload | PictureChoicePayload | MatchingPayload
+    | FillBlankPayload | TranslatePayload | SentenceOrderPayload | SentenceCompletionPayload
+)
+PAYLOAD_SCHEMAS: dict[str, type[PayloadModel]] = {
+    "learn_card": LearnCardPayload,
+    "multiple_choice": TextChoicePayload,
+    "picture_choice": PictureChoicePayload,
+    "matching": MatchingPayload,
+    "fill_blank": FillBlankPayload,
+    "translate": TranslatePayload,
+    "sentence_order": SentenceOrderPayload,
+    "sentence_correction": TextChoicePayload,
+    "sentence_completion": SentenceCompletionPayload,
+}
+
+
+def validate_payload(question_type: str, payload: object) -> QuestionPayload:
+    """Validate seed/input payload; runtime translates validation failure into a safe 500."""
+    schema = PAYLOAD_SCHEMAS.get(question_type)
+    if schema is None:
+        raise ValueError("Unknown question type")
+    # Each concrete model is typed above; no unvalidated dict escapes this boundary.
+    from typing import cast
+
+    return cast(QuestionPayload, schema.model_validate(payload))

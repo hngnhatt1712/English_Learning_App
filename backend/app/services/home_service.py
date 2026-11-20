@@ -2,12 +2,16 @@
 import logging
 from collections.abc import Sequence
 from typing import TypedDict
+from uuid import UUID
+
+from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, ErrorType
 from app.models.user import User
 from app.repositories.lesson_repository import LessonRepository
+from app.repositories.round_repository import RoundRepository
 from app.schemas.enums import ContentStatus
-from app.schemas.home import HomeCurrentTopicDto, HomeDto
+from app.schemas.home import HomeCurrentTopicDto, HomeDto, HomeRoundDto
 from app.schemas.profile import LevelBriefDto
 from app.schemas.streak import StreakDto
 from app.services import topic_service
@@ -16,7 +20,6 @@ from app.services.level_progress_provider import (
     get_user_level_progress,
 )
 from app.services.topic_service import TopicState
-from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
@@ -72,32 +75,44 @@ def _selected_level(snapshot: UserLevelProgress) -> LevelBriefDto | None:
     raise AppError(404, ErrorType.NOT_FOUND, "Level not found")
 
 
-def _current_topic(db: Session, state: TopicState) -> HomeCurrentTopicDto:
-    lessons = LessonRepository(db).get_by_topic_id(state.topic.id)
-    if not lessons:
-        logger.error("Home current Topic has no Lesson")
-        raise AppError(500, ErrorType.INTERNAL_ERROR, "Learning content is unavailable")
-    return HomeCurrentTopicDto(
-        id=state.topic.id, name=state.topic.name, lesson_id=lessons[0].id,
-        # TODO(sprint-5): Resolve the first incomplete Round
-        # when Round and Activity data become available.
-        round=None,
-        is_new=_current_topic_is_new(),
-    )
+class HomeService:
+    def __init__(self, db: Session, lessons: LessonRepository, rounds: RoundRepository) -> None:
+        self.db = db
+        self.lessons = lessons
+        self.rounds = rounds
+
+    def _current_topic(self, state: TopicState, user_id: UUID) -> HomeCurrentTopicDto:
+        lessons = self.lessons.get_by_topic_id(state.topic.id)
+        if not lessons:
+            logger.error("Home current Topic has no Lesson")
+            raise AppError(500, ErrorType.INTERNAL_ERROR, "Learning content is unavailable")
+        activity = self.rounds.first_incomplete(user_id, lessons[0].id)
+        current_round = HomeRoundDto.model_validate({
+            "id": activity.id, "round_number": activity.round_number, "type": activity.round_type,
+        }) if activity is not None else None
+        return HomeCurrentTopicDto(
+            id=state.topic.id, name=state.topic.name, lesson_id=lessons[0].id,
+            round=current_round,
+            is_new=_current_topic_is_new(),
+        )
+
+    def get_home(self, user: User) -> HomeDto:
+        """Build Home with one Level snapshot and fixed batches, independent of content count."""
+        snapshot = get_user_level_progress(self.db, user)
+        level = _selected_level(snapshot)
+        current_topic = None
+        if level is not None:
+            states = topic_service.get_topic_states_for_level(self.db, user.id, level.id, snapshot=snapshot)
+            selected = select_current_topic(states)
+            if selected is not None:
+                current_topic = self._current_topic(selected, user.id)
+        return HomeDto(
+            username=user.username, level=level, current_topic=current_topic,
+            max_stars=sum(stats.max_stars for stats in snapshot.stats_by_level_id.values()),
+            **_home_placeholders(),
+        )
 
 
 def get_home(db: Session, user: User) -> HomeDto:
-    """Build Home with at most six read queries, independent of content count."""
-    snapshot = get_user_level_progress(db, user)
-    level = _selected_level(snapshot)
-    current_topic = None
-    if level is not None:
-        states = topic_service.get_topic_states_for_level(db, user.id, level.id, snapshot=snapshot)
-        selected = select_current_topic(states)
-        if selected is not None:
-            current_topic = _current_topic(db, selected)
-    return HomeDto(
-        username=user.username, level=level, current_topic=current_topic,
-        max_stars=sum(stats.max_stars for stats in snapshot.stats_by_level_id.values()),
-        **_home_placeholders(),
-    )
+    """Keep the session-based entry point for callers outside FastAPI."""
+    return HomeService(db, LessonRepository(db), RoundRepository(db)).get_home(user)

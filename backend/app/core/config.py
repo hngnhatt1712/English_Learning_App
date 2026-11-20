@@ -1,6 +1,9 @@
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from app.utils.media import validate_media_base
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  #Trỏ về thư mục backend
 
@@ -8,6 +11,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent  #Trỏ về thư mục
 class Settings(BaseSettings):
   APP_NAME: str = "Owla English API"
   API_V1_PREFIX: str = "/api/v1"
+  MEDIA_BASE_URL: str = "http://10.0.2.2:8000/static/"
+
+  @field_validator("MEDIA_BASE_URL")
+  @classmethod
+  def media_base(cls, value: str) -> str:
+    return validate_media_base(value)
 
   DATABASE_URL: str
 

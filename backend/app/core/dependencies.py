@@ -1,17 +1,24 @@
-"""Authentication dependency for FastAPI endpoints (contract 4.1, 10.2)."""
+"""FastAPI dependencies for authentication and learning content."""
 import logging
 import uuid
 from datetime import timezone
 from typing import Annotated
 
 import jwt
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
+
 from app.core.errors import AppError, ErrorType
 from app.core.jwt import decode_access_token
 from app.database.session import get_db
 from app.models.user import User
-from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.orm import Session
+from app.repositories.lesson_repository import LessonRepository
+from app.repositories.round_repository import RoundRepository
+from app.repositories.vocabulary_repository import VocabularyRepository
+from app.services.home_service import HomeService
+from app.services.lesson_service import LessonService
+from app.services.round_service import RoundService
 
 logger = logging.getLogger("app.auth")
 
@@ -19,11 +26,12 @@ AUTH_ERROR_DETAIL = "Invalid or expired access token"
 _MAX_TOKEN_LENGTH = 4096
 
 bearer_scheme = HTTPBearer(auto_error=False, scheme_name="BearerAuth")
+DbSession = Annotated[Session, Depends(get_db)]
 
 
 def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
-    db: Annotated[Session, Depends(get_db)],
+    db: DbSession,
 ) -> User:
     """Validate Bearer JWT access token and return authenticated User ORM model.
 
@@ -84,3 +92,37 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_lesson_repository(db: DbSession) -> LessonRepository:
+    return LessonRepository(db)
+
+
+def get_round_repository(db: DbSession) -> RoundRepository:
+    return RoundRepository(db)
+
+
+def get_vocabulary_repository(db: DbSession) -> VocabularyRepository:
+    return VocabularyRepository(db)
+
+
+LessonRepositoryDep = Annotated[LessonRepository, Depends(get_lesson_repository)]
+RoundRepositoryDep = Annotated[RoundRepository, Depends(get_round_repository)]
+VocabularyRepositoryDep = Annotated[VocabularyRepository, Depends(get_vocabulary_repository)]
+
+
+def get_round_service(db: DbSession, rounds: RoundRepositoryDep, vocabularies: VocabularyRepositoryDep) -> RoundService:
+    return RoundService(db, rounds, vocabularies)
+
+
+def get_lesson_service(db: DbSession, lessons: LessonRepositoryDep, rounds: RoundRepositoryDep) -> LessonService:
+    return LessonService(db, lessons, rounds)
+
+
+def get_home_service(db: DbSession, lessons: LessonRepositoryDep, rounds: RoundRepositoryDep) -> HomeService:
+    return HomeService(db, lessons, rounds)
+
+
+RoundServiceDep = Annotated[RoundService, Depends(get_round_service)]
+LessonServiceDep = Annotated[LessonService, Depends(get_lesson_service)]
+HomeServiceDep = Annotated[HomeService, Depends(get_home_service)]

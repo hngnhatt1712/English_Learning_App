@@ -2,16 +2,13 @@
 from typing import Annotated
 from uuid import UUID
 
-from app.core.dependencies import CurrentUser
+from fastapi import APIRouter, Path
+
+from app.core.dependencies import CurrentUser, LessonServiceDep
 from app.core.schemas import ApiResponse, ok
-from app.database.session import get_db
 from app.schemas.lesson import LessonDetailDto
-from app.services import lesson_service
-from fastapi import APIRouter, Depends, Path
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
-DbSession = Annotated[Session, Depends(get_db)]
 
 
 @router.get(
@@ -24,5 +21,7 @@ DbSession = Annotated[Session, Depends(get_db)]
         422: {"model": ApiResponse[None], "description": "validation-error"},
     },
 )
-def get_lesson(lesson_id: Annotated[UUID, Path(alias="lessonId")], user: CurrentUser, db: DbSession) -> dict[str, object]:
-    return ok(lesson_service.get_lesson_detail(db, user.id, lesson_id))
+def get_lesson(
+    lesson_id: Annotated[UUID, Path(alias="lessonId")], user: CurrentUser, service: LessonServiceDep,
+) -> dict[str, object]:
+    return ok(service.get_lesson_detail(user.id, lesson_id))
