@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="round2_title">Round 2</string>
+    <string name="round2_question_number">Question %1$d of %2$d</string>
+    <string name="round2_progress">Questions completed: %1$d of %2$d</string>
+    <string name="round2_choose_meaning">Choose the meaning</string>
+    <string name="round2_choose_word">Choose the word</string>
+    <string name="round2_choose_picture">Choose the picture</string>
+    <string name="round2_picture_option">Option %1$d</string>
+    <string name="round2_option_correct">Correct</string>
+    <string name="round2_option_wrong">Incorrect</string>
+    <string name="round2_check">Check</string>
+    <string name="round2_correct">Good job!</string>
+    <string name="round2_wrong">Not quite.</string>
+    <string name="round2_correct_answer">Correct answer: %1$s</string>
+    <string name="round2_leave_body">Your work in this round will not be saved.</string>
+    <string name="round2_result">Correct answers: %1$d of %2$d</string>
+</resources>
