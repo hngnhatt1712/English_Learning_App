@@ -1,7 +1,11 @@
 package com.nhom21.english_learning_app.features.round
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import com.nhom21.english_learning_app.R
+import com.nhom21.english_learning_app.core.ui.components.VocabularyAudioState
+import com.nhom21.english_learning_app.core.ui.components.VocabularyCardContent
 
 data class Round1Word(
     val id: String,
@@ -11,12 +15,11 @@ data class Round1Word(
     val meaning: String,
     val example: String? = null,
     val imageUrl: String? = null,
-    val isInFlashcards: Boolean = false
+    val isInFlashcards: Boolean = false,
+    val audioUrl: String? = null
 )
 
 enum class Round1Action { Skip, Add, KeepAdded }
-
-enum class RoundAudioState { Ready, Unavailable, Loading, Playing, Error }
 
 data class Round1Feedback(
     val id: Long,
@@ -24,26 +27,32 @@ data class Round1Feedback(
     val canUndo: Boolean = false
 )
 
-sealed interface Round1UiState {
+sealed interface RoundUiState
+
+sealed interface Round1UiState : RoundUiState {
     data object Loading : Round1UiState
     data object Empty : Round1UiState
     data object Error : Round1UiState
+    data object Locked : Round1UiState
 
     data class Learning(
         val word: Round1Word,
         val remainingCardsBehind: Int,
         val processedWords: Int,
         val totalWords: Int,
-        val audio: RoundAudioState,
+        val audio: VocabularyAudioState,
         val hasPendingActions: Boolean = false,
         val feedback: Round1Feedback? = null,
-        val actionsEnabled: Boolean = true
+        val actionsEnabled: Boolean = true,
+        @param:StringRes val syncError: Int? = null
     ) : Round1UiState
 
     data class Finishing(
         val totalWords: Int,
         val status: Round1FinishStatus = Round1FinishStatus.Ready,
-        val feedback: Round1Feedback? = null
+        val feedback: Round1Feedback? = null,
+        @param:StringRes val errorMessage: Int = R.string.round_error,
+        val hasPendingActions: Boolean = false
     ) : Round1UiState
 
     data class Completed(
@@ -55,6 +64,12 @@ sealed interface Round1UiState {
 }
 
 enum class Round1FinishStatus { Ready, Saving, Error }
+
+@Composable
+internal fun Round1Word.cardContent() = VocabularyCardContent(
+    word, roundPartOfSpeechLabel(partOfSpeech)?.let { stringResource(it) },
+    phonetic, meaning, example, isInFlashcards
+)
 
 @StringRes
 internal fun roundPartOfSpeechLabel(partOfSpeech: String): Int? = when (partOfSpeech.lowercase()) {

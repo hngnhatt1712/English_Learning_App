@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.features.round.Round1UiState
 import com.nhom21.english_learning_app.features.round.components.RoundCaption
-import com.nhom21.english_learning_app.features.round.components.roundColors
+import com.nhom21.english_learning_app.ui.theme.roundColors
 
 @Composable
 internal fun Round1CompletionScreen(

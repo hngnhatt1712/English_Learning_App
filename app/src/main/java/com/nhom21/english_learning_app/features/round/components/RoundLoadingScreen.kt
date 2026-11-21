@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.nhom21.english_learning_app.ui.theme.roundColors
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.ui.theme.OwlaType
 

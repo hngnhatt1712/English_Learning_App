@@ -2,7 +2,6 @@ package com.nhom21.english_learning_app.features.round.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -36,41 +34,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.nhom21.english_learning_app.ui.theme.roundColors
 import com.nhom21.english_learning_app.R
-import com.nhom21.english_learning_app.ui.theme.OwlaColors
 import com.nhom21.english_learning_app.ui.theme.OwlaType
-
-internal data class RoundColors(
-    val background: Color,
-    val surface: Color,
-    val ink: Color,
-    val accentInk: Color,
-    val border: Color,
-    val primaryFace: Color,
-    val primaryBase: Color,
-    val primaryLabel: Color,
-    val successInk: Color
-)
-
-@Composable
-internal fun roundColors(): RoundColors {
-    val dark = isSystemInDarkTheme()
-    val background = if (dark) OwlaColors.DarkBackground else OwlaColors.LightBackground
-    val surface = if (dark) OwlaColors.DarkSurface else OwlaColors.LightSurface
-    val ink = if (dark) OwlaColors.DarkTextPrimary else OwlaColors.LightTextPrimary
-    // Use the existing teal pair to tint the screen and preserve legibility on the button face.
-    return RoundColors(
-        background = lerp(background, OwlaColors.PrimaryBase, if (dark) 0.05f else 0.07f),
-        surface = surface,
-        ink = ink,
-        accentInk = if (dark) ink else lerp(OwlaColors.PrimaryShadow, ink, 0.42f),
-        border = if (dark) OwlaColors.DarkBorder else OwlaColors.LightBorder,
-        primaryFace = OwlaColors.PrimaryBase,
-        primaryBase = OwlaColors.PrimaryShadow,
-        primaryLabel = OwlaColors.LightTextPrimary,
-        successInk = if (dark) OwlaColors.SuccessBase else lerp(OwlaColors.SuccessShadow, ink, 0.36f)
-    )
-}
 
 internal val RoundButtonLabel = OwlaType.button.copy(fontSize = 18.sp, lineHeight = 21.sp)
 internal val RoundCaption = OwlaType.caption.copy(fontSize = 14.sp, lineHeight = 18.sp)

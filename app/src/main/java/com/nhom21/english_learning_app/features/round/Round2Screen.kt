@@ -21,6 +21,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Cancel
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +41,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.nhom21.english_learning_app.core.network.ApiErrorType
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.features.review.RoundCompletionScreen
 import com.nhom21.english_learning_app.features.round.components.Round2QuestionContent
@@ -49,7 +53,7 @@ import com.nhom21.english_learning_app.features.round.components.RoundNeutralBut
 import com.nhom21.english_learning_app.features.round.components.RoundPrimaryButton
 import com.nhom21.english_learning_app.features.round.components.RoundProgress
 import com.nhom21.english_learning_app.features.round.components.round2StatusColor
-import com.nhom21.english_learning_app.features.round.components.roundColors
+import com.nhom21.english_learning_app.ui.theme.roundColors
 import com.nhom21.english_learning_app.ui.theme.OwlaType
 
 @Composable
@@ -90,6 +94,14 @@ internal fun Round2Screen(
                 onAudio = { onAudio(state.question.id) },
                 onExit = requestExit
             )
+            is Round2UiState.Message -> RoundStatus(state.reason, ::leave, onRetry)
+            is Round2UiState.Submitting -> {
+                if (state.error == null) {
+                    RoundLoadingScreen(requestExit, message = stringResource(R.string.round2_submitting))
+                } else {
+                    RoundStatusContent(stringResource(if (state.error == ApiErrorType.VALIDATION_ERROR) R.string.round2_submit_invalid else state.error.round2ErrorMessage()), ::leave, onRetry)
+                }
+            }
             is Round2UiState.Completed -> Round2Completion(state, onRetry, ::leave)
         }
     }
@@ -142,14 +154,30 @@ private fun Round2QuestionScreen(
                     if (feedback != null) Round2FeedbackPanel(state, feedback)
                 }
                 if (feedback == null) {
+                    state.checkError?.let { error ->
+                        Snackbar(
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                            action = {
+                                TextButton(onClick = onCheck) { Text(stringResource(R.string.round_retry)) }
+                            },
+                        ) {
+                            Text(stringResource(error.round2ErrorMessage()))
+                        }
+                    }
+                    if (state.networkFailures >= 2 && state.checkError == ApiErrorType.NETWORK) {
+                        RoundNeutralButton(stringResource(R.string.round2_skip_feedback), onNext)
+                    }
                     RoundPrimaryButton(
-                        stringResource(R.string.round2_check),
+                        stringResource(if (state.checking) R.string.round2_checking else R.string.round2_check),
                         onCheck,
-                        enabled = state.selectedOptionId != null,
-                        neutralWhenDisabled = true
+                        enabled = state.selectedOptionId != null && !state.checking,
+                        neutralWhenDisabled = true,
+                        leadingIcon = if (state.checking) {
+                            { CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) }
+                        } else null
                     )
                 } else {
-                    RoundPrimaryButton(stringResource(R.string.round_continue), onNext)
+                    RoundPrimaryButton(stringResource(R.string.round2_continue), onNext)
                 }
             }
         }
@@ -160,10 +188,11 @@ private fun Round2QuestionScreen(
 private fun Round2FeedbackPanel(state: Round2UiState.Question, feedback: Round2Feedback) {
     val colors = roundColors()
     val statusColor = round2StatusColor(feedback.isCorrect)
-    val answer = if (!feedback.isCorrect && state.question.variant != Round2Variant.Picture) {
-        state.question.options.firstOrNull { it.id == feedback.correctOptionId }?.label
-    } else {
-        null
+    val answer = if (feedback.isCorrect) null else {
+        val index = state.question.options.indexOfFirst { it.id == feedback.correctOptionId }
+        state.question.options.getOrNull(index)?.let {
+            it.label ?: stringResource(R.string.round2_picture_option, index + 1)
+        }
     }
     Row(
         modifier = Modifier.fillMaxWidth().background(lerp(colors.surface, statusColor, 0.15f), RoundedCornerShape(20.dp))
@@ -195,11 +224,62 @@ private fun Round2Completion(state: Round2UiState.Completed, onRetry: () -> Unit
     RoundCompletionScreen(
         summary = stringResource(R.string.round2_result, state.correctCount, state.total),
         stars = state.stars,
-        actionLabel = stringResource(if (state.passed) R.string.round_continue else R.string.round_retry),
+        actionLabel = stringResource(if (state.passed) R.string.round_back_to_lesson else R.string.round_retry),
         onAction = if (state.passed) onExit else onRetry,
         mascot = if (state.passed) R.drawable.ic_owla_celebrate else R.drawable.ic_owla,
+        details = {
+            state.scorePercent?.let {
+                Text(stringResource(if (state.passed) R.string.round2_passed else R.string.round2_failed, it),
+                    style = OwlaType.h2, color = roundColors().ink)
+            }
+            state.streak?.let {
+                Text(stringResource(R.string.round2_streak, it.current), style = OwlaType.body, color = roundColors().ink)
+            }
+            state.unlocks?.let {
+                val label = when {
+                    it.levelCompleted || it.nextLevelId != null -> R.string.round2_level_progress
+                    it.topicCompleted || it.nextTopicId != null -> R.string.round2_topic_progress
+                    it.nextRoundId != null -> R.string.round2_round_unlocked
+                    else -> null
+                }
+                if (label != null) Text(stringResource(label), style = OwlaType.body, color = roundColors().ink)
+            }
+        },
         secondaryAction = if (state.passed) null else {
             { RoundNeutralButton(stringResource(R.string.round_back_to_lesson), onExit) }
         }
     )
+}
+
+private fun ApiErrorType.round2ErrorMessage() = when (this) {
+    ApiErrorType.NETWORK -> R.string.round2_network_error
+    ApiErrorType.VALIDATION_ERROR -> R.string.round2_invalid_answer
+    else -> R.string.round2_request_failed
+}
+
+@Composable
+internal fun RoundStatus(reason: RoundMessage, onExit: () -> Unit, onRetry: () -> Unit) {
+    val message = when (reason) {
+        RoundMessage.Empty -> R.string.round2_empty
+        RoundMessage.Locked -> R.string.round_locked
+        RoundMessage.UpdateRequired -> R.string.round2_update
+        RoundMessage.Unsupported -> R.string.round2_unsupported
+        RoundMessage.InvalidContent -> R.string.round2_invalid_content
+        RoundMessage.LoadFailed -> R.string.round2_load_failed
+    }
+    val retryable = reason == RoundMessage.LoadFailed || reason == RoundMessage.InvalidContent
+    RoundStatusContent(stringResource(message), onExit, onRetry.takeIf { retryable })
+}
+
+@Composable
+private fun RoundStatusContent(message: String, onExit: () -> Unit, onRetry: (() -> Unit)?) {
+    Column(
+        modifier = Modifier.fillMaxSize().background(roundColors().background).safeDrawingPadding().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+    ) {
+        Text(message, color = roundColors().ink, style = OwlaType.h2)
+        if (onRetry != null) RoundPrimaryButton(stringResource(R.string.round_retry), onRetry)
+        RoundNeutralButton(stringResource(R.string.round_back_to_lesson), onExit)
+    }
 }

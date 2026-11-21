@@ -31,6 +31,9 @@ data object Home
 data object Lesson
 
 @Serializable
+data class LearnRound(val roundId: String)
+
+@Serializable
 data object Practice
 
 @Serializable
