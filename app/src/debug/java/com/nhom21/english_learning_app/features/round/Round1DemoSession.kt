@@ -1,5 +1,6 @@
 package com.nhom21.english_learning_app.features.round
 
+import com.nhom21.english_learning_app.core.ui.components.VocabularyAudioState
 import com.nhom21.english_learning_app.R
 
 internal val round1DemoWords = listOf(
@@ -22,7 +23,7 @@ internal class Round1DemoSession(private val words: List<Round1Word> = round1Dem
     private var feedbackId = 0L
     private var lastAction: Pair<Round1Word, Round1Action>? = null
     private var feedback: Round1Feedback? = null
-    private var audio = RoundAudioState.Ready
+    private var audio = VocabularyAudioState.Ready
     private var finishing = false
     private var completed = false
 
@@ -61,7 +62,7 @@ internal class Round1DemoSession(private val words: List<Round1Word> = round1Dem
         val originallySaved = words.first { it.id == id }.isInFlashcards
         decisions[id] = if (action == Round1Action.KeepAdded && !originallySaved) Round1Action.Add else action
         queue = queue.drop(1)
-        audio = RoundAudioState.Ready
+        audio = VocabularyAudioState.Ready
         lastAction = (current to action).takeIf { action != Round1Action.KeepAdded && !originallySaved }
         feedback = when (action) {
             Round1Action.Skip -> Round1Feedback(++feedbackId, R.string.round_feedback_skipped, lastAction != null)
@@ -78,20 +79,20 @@ internal class Round1DemoSession(private val words: List<Round1Word> = round1Dem
         val inverse = if (action == Round1Action.Add) Round1Action.Skip else Round1Action.Add
         decisions[word.id] = inverse
         queue = listOf(word.copy(isInFlashcards = inverse == Round1Action.Add)) + queue
-        audio = RoundAudioState.Ready
+        audio = VocabularyAudioState.Ready
         lastAction = null
         feedback = null
         return true
     }
 
     fun playAudio(id: String): Boolean {
-        if (queue.firstOrNull()?.id != id || audio == RoundAudioState.Playing) return false
-        audio = RoundAudioState.Playing
+        if (queue.firstOrNull()?.id != id || audio == VocabularyAudioState.Playing) return false
+        audio = VocabularyAudioState.Playing
         return true
     }
 
     fun stopAudio() {
-        audio = RoundAudioState.Ready
+        audio = VocabularyAudioState.Ready
     }
 
     fun beginFinish(): Boolean {

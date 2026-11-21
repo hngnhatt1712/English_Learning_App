@@ -263,6 +263,9 @@ private fun RoundPreviewSheet(
     onRoundStart: (String) -> Unit,
 ) {
     val theme = rememberTopicTheme(preview.themeKey)
+    val playableRoundId = preview.round.roundId.takeIf {
+        preview.round.kind == RoundKind.LEARN || preview.round.kind == RoundKind.RECOGNITION
+    }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = if (androidx.compose.foundation.isSystemInDarkTheme()) OwlaColors.DarkSurface else OwlaColors.LightSurface) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(preview.topicName, style = OwlaType.caption)
@@ -270,14 +273,19 @@ private fun RoundPreviewSheet(
             Text(stringResource(R.string.lesson_best_stars, preview.bestStars), style = OwlaType.body)
             Owla3DButton(
                 text = stringResource(if (preview.isRetry) R.string.lesson_retry else R.string.lesson_start),
-                onClick = { preview.round.roundId?.let(onRoundStart) },
-                enabled = preview.round.roundId != null,
+                onClick = {
+                    playableRoundId?.let { roundId ->
+                        onDismiss()
+                        onRoundStart(roundId)
+                    }
+                },
+                enabled = playableRoundId != null,
                 baseColor = theme.colors.accent,
                 shadowColor = theme.colors.accentDeep,
                 textColor = theme.colors.onAccent,
                 height = 56.dp,
             )
-            if (preview.round.roundId == null) {
+            if (playableRoundId == null) {
                 Text(stringResource(R.string.lesson_round_coming_soon), style = OwlaType.caption)
             }
             Spacer(Modifier.height(16.dp))

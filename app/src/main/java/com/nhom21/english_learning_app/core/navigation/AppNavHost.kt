@@ -29,6 +29,7 @@ import com.nhom21.english_learning_app.features.home.HomeViewModel
 import com.nhom21.english_learning_app.features.lesson.LessonRoute
 import com.nhom21.english_learning_app.features.practice.PracticePlaceholderScreen
 import com.nhom21.english_learning_app.features.profile.ProfileRoute
+import com.nhom21.english_learning_app.features.round.RoundRoute
 
 /**
  * Root Navigation Host for the application (Sprint 3).
@@ -132,7 +133,8 @@ fun AppNavHost(
             )
             mainGraph(
                 startDestination = MainTab.entries.firstOrNull { it.destination == startDestination }
-                    ?.destination ?: Home
+                    ?.destination ?: Home,
+                learnRound = { RoundRoute(onExit = { navController.popBackStack() }) }
             ) { tab, entry ->
                 when (tab) {
                     MainTab.HOME -> {
@@ -144,7 +146,11 @@ fun AppNavHost(
                             onNavigateToProfile = { navController.selectMainTab(MainTab.PROFILE) }
                         )
                     }
-                    MainTab.LESSON -> LessonRoute()
+                    MainTab.LESSON -> LessonRoute(
+                        onRoundStart = { roundId ->
+                            navController.navigate(LearnRound(roundId)) { launchSingleTop = true }
+                        }
+                    )
                     MainTab.PRACTICE -> PracticePlaceholderScreen()
                     MainTab.PROFILE -> ProfileRoute(
                         onLoggedOut = { navController.applyCommand(AppNavTransitions.onLogout()) }

@@ -1,5 +1,6 @@
 package com.nhom21.english_learning_app.features.round
 
+import com.nhom21.english_learning_app.core.ui.components.VocabularyAudioState
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,11 +21,11 @@ import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.features.round.components.RoundExitDialogContent
 import com.nhom21.english_learning_app.features.round.components.RoundHeading
 import com.nhom21.english_learning_app.features.round.components.RoundWordProgress
-import com.nhom21.english_learning_app.features.round.components.VocabularySwipeCard
-import com.nhom21.english_learning_app.features.round.components.roundColors
+import com.nhom21.english_learning_app.core.ui.components.VocabularySwipeCard
+import com.nhom21.english_learning_app.ui.theme.roundColors
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
 
-private fun demoCard(word: Round1Word = round1DemoWords.first(), audio: RoundAudioState = RoundAudioState.Ready) =
+private fun demoCard(word: Round1Word = round1DemoWords.first(), audio: VocabularyAudioState = VocabularyAudioState.Ready) =
     Round1UiState.Learning(word, 2, 3, round1DemoWords.size, audio)
 
 @Composable
@@ -48,15 +49,15 @@ private fun CardPreview() = RoundPreview(demoCard())
 
 @Preview(name = "Audio playing", widthDp = 360, heightDp = 680)
 @Composable
-private fun AudioPreview() = RoundPreview(demoCard(audio = RoundAudioState.Playing))
+private fun AudioPreview() = RoundPreview(demoCard(audio = VocabularyAudioState.Playing))
 
 @Preview(name = "Audio unavailable", widthDp = 360, heightDp = 680)
 @Composable
-private fun AudioUnavailablePreview() = RoundPreview(demoCard(audio = RoundAudioState.Unavailable))
+private fun AudioUnavailablePreview() = RoundPreview(demoCard(audio = VocabularyAudioState.Unavailable))
 
 @Preview(name = "Audio error", widthDp = 360, heightDp = 680)
 @Composable
-private fun AudioErrorPreview() = RoundPreview(demoCard(audio = RoundAudioState.Error))
+private fun AudioErrorPreview() = RoundPreview(demoCard(audio = VocabularyAudioState.Error))
 
 @Preview(name = "Swipe add", widthDp = 360, heightDp = 680)
 @Composable
@@ -76,8 +77,8 @@ private fun SwipePreview(fraction: Float) {
             RoundHeading(stringResource(R.string.round_title), stringResource(R.string.round_learn_words), {})
             RoundWordProgress(3, 10)
             VocabularySwipeCard(
-                word = round1DemoWords.first(),
-                audio = RoundAudioState.Ready,
+                word = round1DemoWords.first().cardContent(),
+                audio = VocabularyAudioState.Ready,
                 cardsBehind = 2,
                 onAudio = {},
                 cardModifier = Modifier.graphicsLayer {
@@ -139,4 +140,4 @@ private fun EmptyPreview() = RoundPreview(Round1UiState.Empty)
 
 @Preview(name = "Narrow, 130% font scale", widthDp = 320, heightDp = 560, fontScale = 1.3f)
 @Composable
-private fun NarrowPreview() = RoundPreview(demoCard(round1DemoWords.last(), RoundAudioState.Unavailable))
+private fun NarrowPreview() = RoundPreview(demoCard(round1DemoWords.last(), VocabularyAudioState.Unavailable))

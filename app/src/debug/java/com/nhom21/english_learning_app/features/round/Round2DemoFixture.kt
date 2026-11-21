@@ -27,7 +27,7 @@ private fun demoItem(
         Round2Option(
             id = "$id-${word.english}",
             label = when (variant) {
-                Round2Variant.Meaning -> word.vietnamese
+                Round2Variant.Text, Round2Variant.Meaning -> word.vietnamese
                 Round2Variant.Word -> word.english
                 Round2Variant.Picture -> null
             },

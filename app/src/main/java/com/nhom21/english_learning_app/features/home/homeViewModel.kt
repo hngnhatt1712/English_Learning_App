@@ -42,7 +42,7 @@ class HomeViewModel @Inject constructor(
                     val streak = data.streak
 
                     val totalRoundsCount = currentTopic?.roundsTotal ?: 5
-                    val currentRoundNum = currentTopic?.round ?: 0
+                    val currentRoundNum = currentTopic?.round?.roundNumber ?: 0
                     val progressRatio = if (totalRoundsCount > 0) {
                         (currentRoundNum - 1).toFloat() / totalRoundsCount.toFloat()
                     } else {

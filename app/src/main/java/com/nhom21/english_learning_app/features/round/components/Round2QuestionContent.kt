@@ -51,7 +51,9 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.nhom21.english_learning_app.ui.theme.roundColors
 import com.nhom21.english_learning_app.R
+import com.nhom21.english_learning_app.features.round.RoundWordImage
 import com.nhom21.english_learning_app.features.round.Round2Option
 import com.nhom21.english_learning_app.features.round.Round2Question
 import com.nhom21.english_learning_app.features.round.Round2UiState
@@ -95,10 +97,13 @@ private fun Round2Prompt(question: Round2Question, onAudio: () -> Unit) {
     val instruction = when (question.variant) {
         Round2Variant.Meaning -> R.string.round2_choose_meaning
         Round2Variant.Word -> R.string.round2_choose_word
+        Round2Variant.Text -> R.string.round2_choose_answer
         Round2Variant.Picture -> R.string.round2_choose_picture
     }
     Text(stringResource(instruction), style = OwlaType.h2, color = colors.ink, textAlign = TextAlign.Center)
-    if (question.variant == Round2Variant.Meaning) {
+    if (question.imageUrl != null) {
+        RoundWordImage(question.imageUrl, Modifier.fillMaxWidth().height(112.dp))
+    } else if (question.variant == Round2Variant.Meaning) {
         question.illustrationRes?.let { image ->
             Image(
                 painterResource(image),
@@ -122,7 +127,7 @@ private fun Round2Prompt(question: Round2Question, onAudio: () -> Unit) {
             color = colors.accentInk,
             textAlign = TextAlign.Center
         )
-        if (question.variant != Round2Variant.Word) {
+        if (question.audioUrl != null || question.illustrationRes != null) {
             IconButton(onClick = onAudio, modifier = Modifier.size(48.dp)) {
                 Box(
                     Modifier.size(36.dp).background(colors.primaryFace, CircleShape),
@@ -213,7 +218,7 @@ private fun Round2AnswerOption(
             .background(shadowColor, shape)
             .selectable(
                 selected = selected,
-                enabled = feedback == null,
+                enabled = feedback == null && !state.checking,
                 role = Role.RadioButton,
                 interactionSource = interaction,
                 indication = null,
@@ -229,7 +234,9 @@ private fun Round2AnswerOption(
         if (state.question.variant == Round2Variant.Picture) {
             Box(faceModifier.aspectRatio(1.55f).heightIn(min = 64.dp), contentAlignment = Alignment.Center) {
                 val image = option.imageRes
-                if (image != null) {
+                if (option.imageUrl != null) {
+                    RoundWordImage(option.imageUrl, Modifier.fillMaxSize().padding(12.dp))
+                } else if (image != null) {
                     Image(
                         painterResource(image),
                         contentDescription = null,

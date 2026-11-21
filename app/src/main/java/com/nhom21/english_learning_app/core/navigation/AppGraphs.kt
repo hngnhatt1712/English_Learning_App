@@ -26,6 +26,7 @@ internal fun NavGraphBuilder.authGraph(
 
 internal fun NavGraphBuilder.mainGraph(
     startDestination: Any = Home,
+    learnRound: @Composable () -> Unit = {},
     content: @Composable (MainTab, NavBackStackEntry) -> Unit
 ) {
     navigation<MainGraph>(startDestination = startDestination) {
@@ -33,5 +34,6 @@ internal fun NavGraphBuilder.mainGraph(
         composable<Lesson> { content(MainTab.LESSON, it) }
         composable<Practice> { content(MainTab.PRACTICE, it) }
         composable<Profile> { content(MainTab.PROFILE, it) }
+        composable<LearnRound> { learnRound() }
     }
 }

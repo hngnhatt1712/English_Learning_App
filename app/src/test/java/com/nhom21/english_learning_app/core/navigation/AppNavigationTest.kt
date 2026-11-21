@@ -58,29 +58,26 @@ class AppNavigationTest {
     }
 
     @Test
-    fun `onLoginSuccess with null selectedLevelId navigates to SelectLevel and pops Login inclusive`() {
+    fun `onLoginSuccess without a level clears Auth history and enters SelectLevel`() {
         val command = AppNavTransitions.onLoginSuccess(selectedLevelId = null)
         assertEquals(SelectLevel, command.destination)
-        assertEquals(Login, command.popUpToRoute)
-        assertTrue(command.popUpToInclusive)
+        assertTrue(command.clearEntireBackStack)
         assertTrue(command.launchSingleTop)
     }
 
     @Test
-    fun `onLoginSuccess with valid selectedLevelId navigates to Home and pops Login inclusive`() {
+    fun `onLoginSuccess with a level clears Auth history and enters MainGraph`() {
         val command = AppNavTransitions.onLoginSuccess(selectedLevelId = "11111111-1111-1111-1111-111111111102")
-        assertEquals(Home, command.destination)
-        assertEquals(Login, command.popUpToRoute)
-        assertTrue(command.popUpToInclusive)
+        assertEquals(MainGraph, command.destination)
+        assertTrue(command.clearEntireBackStack)
         assertTrue(command.launchSingleTop)
     }
 
     @Test
-    fun `onSignupSuccess always navigates to SelectLevel and pops Login inclusive`() {
+    fun `onSignupSuccess always enters SelectLevel and clears Auth history`() {
         val command = AppNavTransitions.onSignupSuccess()
         assertEquals(SelectLevel, command.destination)
-        assertEquals(Login, command.popUpToRoute)
-        assertTrue("Must pop up to Login inclusive to remove both Signup and Login", command.popUpToInclusive)
+        assertTrue("Remove both Signup and Login", command.clearEntireBackStack)
         assertTrue(command.launchSingleTop)
     }
 
@@ -94,11 +91,10 @@ class AppNavigationTest {
     }
 
     @Test
-    fun `onWelcomeContinue navigates to Home and pops WelcomeSuccess inclusive`() {
+    fun `onWelcomeContinue enters MainGraph and clears onboarding history`() {
         val command = AppNavTransitions.onWelcomeContinue()
-        assertEquals(Home, command.destination)
-        assertEquals(WelcomeSuccess, command.popUpToRoute)
-        assertTrue(command.popUpToInclusive)
+        assertEquals(MainGraph, command.destination)
+        assertTrue(command.clearEntireBackStack)
         assertTrue(command.launchSingleTop)
     }
 
@@ -167,7 +163,7 @@ class AppNavigationTest {
         stack = AppNavTransitions.applyToBackStack(stack, AppNavTransitions.onLoginRegisterClick())
         assertEquals(listOf<Any>(Login, Signup), stack)
 
-        // 2. Signup success -> pops Login (inclusive) -> [SelectLevel]
+        // 2. Signup success -> clears Auth history -> [SelectLevel]
         stack = AppNavTransitions.applyToBackStack(stack, AppNavTransitions.onSignupSuccess())
         assertEquals(listOf<Any>(SelectLevel), stack)
         // Pressing Back at SelectLevel exits app (empty stack), never returns to Signup or Login
@@ -179,9 +175,9 @@ class AppNavigationTest {
         // Pressing Back at WelcomeSuccess exits app, never returns to SelectLevel
         assertTrue(AppNavTransitions.applyToBackStack(stack, NavCommand.PopBackStack).isEmpty())
 
-        // 4. WelcomeSuccess continue -> pops WelcomeSuccess (inclusive) -> [Home]
+        // 4. WelcomeSuccess continue -> clears Auth/onboarding -> [MainGraph]
         stack = AppNavTransitions.applyToBackStack(stack, AppNavTransitions.onWelcomeContinue())
-        assertEquals(listOf<Any>(Home), stack)
+        assertEquals(listOf<Any>(MainGraph), stack)
         // Pressing Back at Home exits app
         assertTrue(AppNavTransitions.applyToBackStack(stack, NavCommand.PopBackStack).isEmpty())
     }
@@ -205,14 +201,24 @@ class AppNavigationTest {
     }
 
     @Test
-    fun `login flow with existing level goes directly to Home and pops Login`() {
+    fun `login flow with existing level enters MainGraph and removes Login`() {
         var stack = listOf<Any>(Login)
         stack = AppNavTransitions.applyToBackStack(
             stack,
             AppNavTransitions.onLoginSuccess(selectedLevelId = "11111111-1111-1111-1111-111111111101")
         )
-        assertEquals(listOf<Any>(Home), stack)
+        assertEquals(listOf<Any>(MainGraph), stack)
         assertTrue(AppNavTransitions.applyToBackStack(stack, NavCommand.PopBackStack).isEmpty())
+    }
+
+    @Test
+    fun `logout removes all main and learning routes and is single top`() {
+        val command = AppNavTransitions.onLogout()
+        assertTrue(command.clearEntireBackStack)
+        val afterLogout = AppNavTransitions.applyToBackStack(listOf(MainGraph, Home, Profile), command)
+        assertEquals(listOf<Any>(Login), afterLogout)
+        assertTrue(AppNavTransitions.applyToBackStack(afterLogout, NavCommand.PopBackStack).isEmpty())
+        assertEquals(afterLogout, AppNavTransitions.applyToBackStack(afterLogout, command))
     }
 }
 

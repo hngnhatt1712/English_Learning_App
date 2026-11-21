@@ -2,6 +2,8 @@ package com.nhom21.english_learning_app.features.round
 
 import android.animation.ValueAnimator
 import android.os.Build
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -20,9 +22,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BookmarkAdd
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -35,17 +39,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.nhom21.english_learning_app.R
+import com.nhom21.english_learning_app.core.ui.components.VocabularySwipeCard
 import com.nhom21.english_learning_app.features.round.components.RoundCaption
 import com.nhom21.english_learning_app.features.round.components.RoundNeutralButton
 import com.nhom21.english_learning_app.features.round.components.RoundPrimaryButton
-import com.nhom21.english_learning_app.features.round.components.VocabularySwipeCard
-import com.nhom21.english_learning_app.features.round.components.roundColors
-import com.nhom21.english_learning_app.features.round.components.vocabularyForwardAction
+import com.nhom21.english_learning_app.ui.theme.roundColors
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -56,21 +61,38 @@ internal fun Round1Study(
     onAudio: (String) -> Unit,
     modifier: Modifier = Modifier,
     interactionEnabled: Boolean = true,
-    showExample: Boolean = false,
-    imageContent: (@Composable (String) -> Unit)? = null
+    imageContent: (@Composable (String) -> Unit)? = null,
+    claimSwipeDemo: (suspend () -> Boolean)? = null
 ) {
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
     val latestAction by rememberUpdatedState(onAction)
+    val view = LocalView.current
     val canMove = interactionEnabled && state.actionsEnabled
     val canStillMove by rememberUpdatedState(canMove)
     var committing by remember { mutableStateOf(false) }
     var offset by remember { mutableFloatStateOf(0f) }
     var swipeWidth by remember { mutableFloatStateOf(1f) }
     var settleJob by remember { mutableStateOf<Job?>(null) }
+    var ticked by remember { mutableStateOf(false) }
+    var touched by remember { mutableStateOf(false) }
+    var showHand by remember { mutableStateOf(false) }
+    val handOffset = remember { Animatable(0f) }
     val reducedMotion = Build.VERSION.SDK_INT >= 26 && !ValueAnimator.areAnimatorsEnabled()
     val velocityThreshold = with(density) { 900.dp.toPx() }
     val cardThreshold = swipeWidth * 0.4f
+
+    LaunchedEffect(canMove, touched) {
+        if (canMove && !touched && claimSwipeDemo?.invoke() == true) {
+            showHand = true
+            try {
+                if (reducedMotion) delay(750)
+                else handOffset.animateTo(1f, tween(750))
+            } finally {
+                showHand = false
+            }
+        }
+    }
 
     fun returnCard() {
         settleJob?.cancel()
@@ -81,6 +103,7 @@ internal fun Round1Study(
 
     fun commit(action: Round1Action) {
         if (committing || !canStillMove) return
+        touched = true
         committing = true
         settleJob?.cancel()
         scope.launch {
@@ -100,7 +123,13 @@ internal fun Round1Study(
     }
 
     val drag = rememberDraggableState { change ->
-        if (!committing && canMove) offset = (offset + change).coerceIn(-swipeWidth, swipeWidth)
+        if (!committing && canMove) {
+            offset = (offset + change).coerceIn(-swipeWidth, swipeWidth)
+            if (!ticked && abs(offset) >= cardThreshold) {
+                ticked = true
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            }
+        }
     }
     Column(
         modifier.widthIn(max = 480.dp).fillMaxWidth(),
@@ -108,7 +137,7 @@ internal fun Round1Study(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         VocabularySwipeCard(
-            word = state.word,
+            word = state.word.cardContent(),
             audio = state.audio,
             cardsBehind = state.remainingCardsBehind,
             onAudio = { if (interactionEnabled) onAudio(state.word.id) },
@@ -117,13 +146,22 @@ internal fun Round1Study(
                 state = drag,
                 orientation = Orientation.Horizontal,
                 enabled = canMove && !committing,
-                onDragStarted = { settleJob?.cancel() },
+                onDragStarted = {
+                    settleJob?.cancel()
+                    ticked = false
+                    touched = true
+                },
                 onDragStopped = { velocity ->
                     val enoughDistance = abs(offset) >= cardThreshold
                     val fling = abs(velocity) >= velocityThreshold && abs(offset) > cardThreshold / 5 &&
                         (velocity > 0f) == (offset > 0f)
                     if (enoughDistance || fling) {
-                        commit(if (offset < 0f) Round1Action.Skip else vocabularyForwardAction(state.word))
+                        val action = when {
+                            offset < 0f -> Round1Action.Skip
+                            state.word.isInFlashcards -> Round1Action.KeepAdded
+                            else -> Round1Action.Add
+                        }
+                        commit(action)
                     } else if (!committing) {
                         returnCard()
                     }
@@ -133,20 +171,35 @@ internal fun Round1Study(
                 rotationZ = if (reducedMotion) 0f else (offset / cardThreshold).coerceIn(-1f, 1f) * 12f
             },
             swipeFraction = (offset / cardThreshold).coerceIn(-1f, 1f),
-            showExample = showExample,
-            imageContent = imageContent
+            imageContent = state.word.imageUrl?.let { url ->
+                imageContent?.let { content -> { content(url) } }
+            }
         )
-        Text(
-            stringResource(if (state.word.isInFlashcards) R.string.round_swipe_hint_added else R.string.round_swipe_hint),
-            style = RoundCaption,
-            color = roundColors().ink,
-            textAlign = TextAlign.Center
-        )
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Text(
+                stringResource(R.string.round_swipe_hint),
+                style = RoundCaption,
+                color = roundColors().ink,
+                textAlign = TextAlign.Center
+            )
+            if (showHand) {
+                Icon(
+                    Icons.Rounded.TouchApp,
+                    contentDescription = null,
+                    tint = roundColors().accentInk,
+                    modifier = Modifier.size(32.dp).graphicsLayer {
+                        translationX = 72.dp.toPx() * handOffset.value
+                        translationY = -36.dp.toPx()
+                        alpha = 1f - handOffset.value * 0.6f
+                    }
+                )
+            }
+        }
         Round1ActionButtons(
             alreadyAdded = state.word.isInFlashcards,
             enabled = canMove && !committing,
             onSkip = { commit(Round1Action.Skip) },
-            onAdd = { commit(vocabularyForwardAction(state.word)) }
+            onAdd = { commit(if (state.word.isInFlashcards) Round1Action.KeepAdded else Round1Action.Add) }
         )
     }
 }

@@ -3,23 +3,27 @@ package com.nhom21.english_learning_app.features.round
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,7 +50,7 @@ import com.nhom21.english_learning_app.features.round.components.RoundLoadingScr
 import com.nhom21.english_learning_app.features.round.components.RoundNeutralButton
 import com.nhom21.english_learning_app.features.round.components.RoundPrimaryButton
 import com.nhom21.english_learning_app.features.round.components.RoundWordProgress
-import com.nhom21.english_learning_app.features.round.components.roundColors
+import com.nhom21.english_learning_app.ui.theme.roundColors
 import com.nhom21.english_learning_app.ui.theme.OwlaType
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -62,7 +66,9 @@ fun Round1Screen(
     onContinue: () -> Unit,
     modifier: Modifier = Modifier,
     exitBody: String? = null,
-    imageContent: (@Composable (String) -> Unit)? = null
+    imageContent: (@Composable (String) -> Unit)? = null,
+    claimSwipeDemo: (suspend () -> Boolean)? = null,
+    feedbackManaged: Boolean = false
 ) {
     var confirmExit by rememberSaveable { mutableStateOf(false) }
     var leaving by remember { mutableStateOf(false) }
@@ -84,21 +90,21 @@ fun Round1Screen(
         Round1UiState.Loading -> RoundLoadingScreen(requestExit, modifier)
         is Round1UiState.Completed -> Round1CompletionScreen(state, { leave(onContinue) }, modifier)
         else -> Round1Content(
-            state, onCardAction, onUndo, onAudio, onFinish, onRetry, requestExit,
-            modifier, !confirmExit && !leaving, imageContent
+            state, onCardAction, onUndo, onAudio, onFinish, onRetry, requestExit, { leave(onExit) },
+            modifier, !confirmExit && !leaving, imageContent, claimSwipeDemo, feedbackManaged
         )
     }
 
     if (exitVisible) {
         val pending = state is Round1UiState.Learning && state.hasPendingActions ||
-            state is Round1UiState.Finishing && state.status == Round1FinishStatus.Saving
+            state is Round1UiState.Finishing && (state.hasPendingActions || state.status == Round1FinishStatus.Saving)
         RoundExitDialog(
             onKeepLearning = { confirmExit = false },
             onLeave = { leave(onExit) },
             body = when {
                 pending -> stringResource(R.string.round_leave_pending)
                 exitBody != null -> exitBody
-                else -> stringResource(R.string.round_leave_default)
+                else -> stringResource(R.string.round_leave_saved)
             }
         )
     }
@@ -113,9 +119,12 @@ private fun Round1Content(
     onFinish: () -> Unit,
     onRetry: () -> Unit,
     onRequestExit: () -> Unit,
+    onBackToLesson: () -> Unit,
     modifier: Modifier,
     interactionEnabled: Boolean,
-    imageContent: (@Composable (String) -> Unit)?
+    imageContent: (@Composable (String) -> Unit)?,
+    claimSwipeDemo: (suspend () -> Boolean)?,
+    feedbackManaged: Boolean
 ) {
     val colors = roundColors()
     val snackbars = remember { SnackbarHostState() }
@@ -128,8 +137,8 @@ private fun Round1Content(
     val message = feedback?.let { stringResource(it.message) }
     val undoLabel = stringResource(R.string.round_undo)
     val accessibility = LocalAccessibilityManager.current
-    LaunchedEffect(feedback?.id, message, undoLabel) {
-        if (feedback != null && message != null) {
+    LaunchedEffect(feedback?.id, message, undoLabel, feedbackManaged) {
+        if (!feedbackManaged && feedback != null && message != null) {
             val timeout = accessibility?.calculateRecommendedTimeoutMillis(
                 3_000L, containsText = true, containsControls = feedback.canUndo
             ) ?: 3_000L
@@ -144,16 +153,16 @@ private fun Round1Content(
         }
     }
 
-    BoxWithConstraints(modifier.fillMaxSize().background(colors.background)) {
-        val availableHeight = maxHeight
-        val showExample = availableHeight >= 680.dp
+    Box(modifier.fillMaxSize().background(colors.background)) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).heightIn(min = availableHeight)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 RoundHeading(
                     stringResource(R.string.round_title),
                     stringResource(R.string.round_learn_words),
@@ -165,46 +174,78 @@ private fun Round1Content(
                     is Round1UiState.Finishing -> RoundWordProgress(state.totalWords, state.totalWords, Modifier.padding(top = 12.dp))
                     else -> Unit
                 }
-            }
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
-            ) {
                 when (state) {
-                    is Round1UiState.Learning -> key(state.word.id) {
-                        Round1Study(
-                            state, onCardAction, onAudio,
-                            interactionEnabled = interactionEnabled,
-                            showExample = showExample,
-                            imageContent = imageContent
-                        )
+                    is Round1UiState.Learning -> {
+                        key(state.word.id) {
+                            Round1Study(
+                                state, onCardAction, onAudio,
+                                interactionEnabled = interactionEnabled,
+                                imageContent = imageContent,
+                                claimSwipeDemo = claimSwipeDemo
+                            )
+                        }
+                        state.syncError?.let { error ->
+                            Round1Message(stringResource(error), stringResource(R.string.round_retry), onRetry)
+                        }
                     }
-                    is Round1UiState.Finishing -> Round1FinishPanel(state.status, onFinish)
+                    is Round1UiState.Finishing -> Round1FinishPanel(state, onFinish)
                     Round1UiState.Error -> Round1Message(
                         stringResource(R.string.round_error), stringResource(R.string.round_retry), onRetry
                     )
+                    Round1UiState.Locked -> {
+                        Icon(Icons.Rounded.Lock, contentDescription = null, tint = colors.ink)
+                        Round1Message(
+                            stringResource(R.string.round_locked),
+                            stringResource(R.string.round_back_to_lesson),
+                            onBackToLesson
+                        )
+                    }
                     Round1UiState.Empty -> Round1Message(
-                        stringResource(R.string.round_empty), stringResource(R.string.round_back_to_lesson), onRequestExit
+                        stringResource(R.string.round_empty), stringResource(R.string.round_back_to_lesson), onBackToLesson
                     )
                     else -> Unit
                 }
             }
-            SnackbarHost(snackbars, Modifier.widthIn(max = 480.dp).fillMaxWidth()) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = colors.surface,
-                    contentColor = colors.ink,
-                    actionColor = colors.accentInk
-                )
+            val snackbarWidth = Modifier.widthIn(max = 480.dp).fillMaxWidth()
+            if (feedbackManaged) {
+                if (feedback != null && message != null) {
+                    Snackbar(
+                        modifier = snackbarWidth.semantics { liveRegion = LiveRegionMode.Polite },
+                        containerColor = colors.surface,
+                        contentColor = colors.ink
+                    ) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(message, Modifier.weight(1f))
+                            if (feedback.canUndo) {
+                                TextButton(onClick = { latestUndo(feedback.id) }, enabled = interactionEnabled) {
+                                    Text(undoLabel, color = colors.accentInk)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                SnackbarHost(snackbars, snackbarWidth) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = colors.surface,
+                        contentColor = colors.ink,
+                        actionColor = colors.accentInk
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun Round1FinishPanel(status: Round1FinishStatus, onFinish: () -> Unit) {
+private fun Round1FinishPanel(state: Round1UiState.Finishing, onFinish: () -> Unit) {
     val colors = roundColors()
+    val status = state.status
     var clicked by remember(status) { mutableStateOf(false) }
     Text(stringResource(R.string.round_done), style = OwlaType.h1, color = colors.accentInk, textAlign = TextAlign.Center)
     when (status) {
@@ -219,7 +260,7 @@ private fun Round1FinishPanel(status: Round1FinishStatus, onFinish: () -> Unit) 
         }
         Round1FinishStatus.Error, Round1FinishStatus.Ready -> {
             val error = status == Round1FinishStatus.Error
-            if (error) Text(stringResource(R.string.round_error), style = OwlaType.body, color = colors.ink)
+            if (error) Text(stringResource(state.errorMessage), style = OwlaType.body, color = colors.ink)
             RoundPrimaryButton(
                 stringResource(if (error) R.string.round_retry else R.string.round_finish),
                 onClick = {

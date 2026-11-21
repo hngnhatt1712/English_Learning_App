@@ -59,3 +59,5 @@ service-account-key.json
 .pytest_cache/
 .ruff_cache/
 *.pyc
+
+/.agents/
