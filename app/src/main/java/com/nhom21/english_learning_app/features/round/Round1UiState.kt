@@ -44,7 +44,8 @@ sealed interface Round1UiState : RoundUiState {
         val hasPendingActions: Boolean = false,
         val feedback: Round1Feedback? = null,
         val actionsEnabled: Boolean = true,
-        @param:StringRes val syncError: Int? = null
+        @param:StringRes val syncError: Int? = null,
+        val savedStars: Int = 0,
     ) : Round1UiState
 
     data class Finishing(
@@ -52,14 +53,16 @@ sealed interface Round1UiState : RoundUiState {
         val status: Round1FinishStatus = Round1FinishStatus.Ready,
         val feedback: Round1Feedback? = null,
         @param:StringRes val errorMessage: Int = R.string.round_error,
-        val hasPendingActions: Boolean = false
+        val hasPendingActions: Boolean = false,
+        val savedStars: Int = 0,
     ) : Round1UiState
 
     data class Completed(
         val learnedWords: Int,
         val stars: Int,
         val addedWords: Int? = null,
-        val skippedWords: Int? = null
+        val skippedWords: Int? = null,
+        val resultId: Long = 0,
     ) : Round1UiState
 }
 

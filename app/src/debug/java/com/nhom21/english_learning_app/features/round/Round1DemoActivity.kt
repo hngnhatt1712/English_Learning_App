@@ -13,11 +13,9 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -46,7 +44,6 @@ class Round1DemoActivity : ComponentActivity() {
                         onExit = ::finish,
                         onContinue = ::finish,
                         modifier = Modifier.padding(insets).consumeWindowInsets(insets),
-                        exitBody = stringResource(R.string.round_leave_local)
                     )
                 }
             }

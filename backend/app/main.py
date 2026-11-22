@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -13,6 +16,10 @@ app = FastAPI(
     version="1.0.0",
     description="Backend API for Owla English Learning App"
 )
+
+media_root = Path(__file__).resolve().parent / "static" / "media"
+if media_root.is_dir():
+    app.mount("/static/media", StaticFiles(directory=media_root), name="learning-media")
 
 # Đăng ký global error handlers TRƯỚC mọi router (contract 10.2)
 register_handlers(app)

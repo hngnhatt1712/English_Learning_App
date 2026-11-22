@@ -83,6 +83,7 @@ data class LessonUiState(
 )
 
 sealed interface LessonEvent {
+    data object RefreshFailed : LessonEvent
     data class ScrollToCurrent(val animated: Boolean) : LessonEvent
     data class ScrollToTopic(val topicId: String) : LessonEvent
     data class ShowMessage(@StringRes val resId: Int) : LessonEvent

@@ -14,6 +14,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.toRoute
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.nhom21.english_learning_app.features.lesson.LessonViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -134,7 +137,13 @@ fun AppNavHost(
             mainGraph(
                 startDestination = MainTab.entries.firstOrNull { it.destination == startDestination }
                     ?.destination ?: Home,
-                learnRound = { RoundRoute(onExit = { navController.popBackStack() }) }
+                learnRound = { entry ->
+                    val roundId = remember(entry) { entry.toRoute<LearnRound>().roundId }
+                    RoundRoute(
+                        onExit = { navController.popBackStack() },
+                        onSubmitted = { navController.previousBackStackEntry?.savedStateHandle?.set("submittedRound", roundId) },
+                    )
+                }
             ) { tab, entry ->
                 when (tab) {
                     MainTab.HOME -> {
@@ -146,11 +155,19 @@ fun AppNavHost(
                             onNavigateToProfile = { navController.selectMainTab(MainTab.PROFILE) }
                         )
                     }
-                    MainTab.LESSON -> LessonRoute(
-                        onRoundStart = { roundId ->
-                            navController.navigate(LearnRound(roundId)) { launchSingleTop = true }
+                    MainTab.LESSON -> {
+                        val lesson = hiltViewModel<LessonViewModel>(entry)
+                        LifecycleResumeEffect(Unit, lifecycleOwner = entry) {
+                            entry.savedStateHandle.remove<String>("submittedRound")?.let(lesson::refreshRound)
+                            onPauseOrDispose {}
                         }
-                    )
+                        LessonRoute(
+                            viewModel = lesson,
+                            onRoundStart = { roundId ->
+                                navController.navigate(LearnRound(roundId)) { launchSingleTop = true }
+                            }
+                        )
+                    }
                     MainTab.PRACTICE -> PracticePlaceholderScreen()
                     MainTab.PROFILE -> ProfileRoute(
                         onLoggedOut = { navController.applyCommand(AppNavTransitions.onLogout()) }

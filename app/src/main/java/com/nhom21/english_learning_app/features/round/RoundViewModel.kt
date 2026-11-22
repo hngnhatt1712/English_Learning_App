@@ -13,7 +13,6 @@ import com.nhom21.english_learning_app.core.navigation.LearnRound
 import com.nhom21.english_learning_app.core.network.ApiErrorType
 import com.nhom21.english_learning_app.core.network.ApiResult
 import com.nhom21.english_learning_app.core.ui.components.VocabularyAudioState
-import com.nhom21.english_learning_app.data.repository.RoundRepository
 import com.nhom21.english_learning_app.domain.model.Answer
 import com.nhom21.english_learning_app.domain.model.Question
 import com.nhom21.english_learning_app.domain.model.RoundAnswer
@@ -22,6 +21,10 @@ import com.nhom21.english_learning_app.domain.model.RoundType
 import com.nhom21.english_learning_app.domain.model.Vocabulary
 import com.nhom21.english_learning_app.domain.model.VocabularyAction
 import com.nhom21.english_learning_app.domain.model.VocabularyStatus
+import com.nhom21.english_learning_app.domain.usecase.CheckAnswerUseCase
+import com.nhom21.english_learning_app.domain.usecase.GetRoundUseCase
+import com.nhom21.english_learning_app.domain.usecase.SubmitRoundUseCase
+import com.nhom21.english_learning_app.domain.usecase.SwipeVocabularyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
 import javax.inject.Inject
@@ -34,15 +37,28 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class RoundViewModel internal constructor(
     private val roundId: String,
-    private val repository: RoundRepository,
+    private val getRound: GetRoundUseCase,
+    private val submitRound: SubmitRoundUseCase,
+    private val swipeVocabulary: SwipeVocabularyUseCase,
+    private val checkAnswer: CheckAnswerUseCase,
     private val preferences: DataStore<Preferences>,
 ) : ViewModel() {
     @Inject
     constructor(
         savedStateHandle: SavedStateHandle,
-        repository: RoundRepository,
+        getRound: GetRoundUseCase,
+        submitRound: SubmitRoundUseCase,
+        swipeVocabulary: SwipeVocabularyUseCase,
+        checkAnswer: CheckAnswerUseCase,
         preferences: DataStore<Preferences>,
-    ) : this(savedStateHandle.toRoute<LearnRound>().roundId, repository, preferences)
+    ) : this(
+        savedStateHandle.toRoute<LearnRound>().roundId,
+        getRound,
+        submitRound,
+        swipeVocabulary,
+        checkAnswer,
+        preferences,
+    )
 
     private val mutableState = MutableStateFlow<RoundUiState>(Round1UiState.Loading)
     val uiState = mutableState.asStateFlow()
@@ -64,6 +80,8 @@ class RoundViewModel internal constructor(
     private var recoveringIncomplete = false
     private var syncError: ApiErrorType? = null
     private var submitError: ApiErrorType? = null
+    private var savedStars = 0
+    private var resultSequence = 0L
 
     private var recognitionQuestions = emptyList<Round2Question>()
     private val answers = linkedMapOf<String, RoundAnswer>()
@@ -149,11 +167,12 @@ class RoundViewModel internal constructor(
         loading = true
         mutableState.value = Round1UiState.Loading
         viewModelScope.launch {
-            val result = repository.getRound(roundId)
+            val result = getRound(roundId)
             loading = false
             when (result) {
                 is ApiResult.Success -> {
                     val round = result.data.round
+                    savedStars = round.stars
                     val questions = result.data.questions
                     if (questions.any { it.content is QuestionContent.Unknown }) {
                         mutableState.value = Round2UiState.Message(RoundMessage.UpdateRequired)
@@ -223,7 +242,9 @@ class RoundViewModel internal constructor(
     }
 
     private fun recognitionQuestion(index: Int) =
-        Round2UiState.Question(recognitionQuestions[index], index + 1, recognitionQuestions.size)
+        Round2UiState.Question(
+            recognitionQuestions[index], index + 1, recognitionQuestions.size, savedStars = savedStars
+        )
 
     fun selectOption(questionId: String, optionId: String) {
         val state = editableQuestion(questionId) ?: return
@@ -245,7 +266,7 @@ class RoundViewModel internal constructor(
         val answer = state.selectedAnswer() ?: return
         mutableState.value = state.copy(checking = true, checkError = null)
         viewModelScope.launch {
-            when (val response = repository.checkAnswer(questionId, answer)) {
+            when (val response = checkAnswer(questionId, answer)) {
                 is ApiResult.Success -> {
                     val result = response.data
                     val correctId = when (val correct = result.correctAnswer) {
@@ -291,9 +312,12 @@ class RoundViewModel internal constructor(
         val payload = recognitionQuestions.map { answers.getValue(it.id) }
         mutableState.value = Round2UiState.Submitting()
         viewModelScope.launch {
-            mutableState.value = when (val response = repository.submitRound(roundId, payload)) {
+            mutableState.value = when (val response = submitRound(roundId, payload)) {
                 is ApiResult.Success -> with(response.data) {
-                    Round2UiState.Completed(correctCount, totalQuestions, stars, passed, scorePercent, unlocks, streak)
+                    Round2UiState.Completed(
+                        correctCount, totalQuestions, stars, passed, scorePercent, unlocks, streak,
+                        resultId = ++resultSequence,
+                    )
                 }
                 is ApiResult.Failure -> if (response.error.type == ApiErrorType.ROUND_LOCKED) {
                     Round2UiState.Message(RoundMessage.Locked)
@@ -308,7 +332,7 @@ class RoundViewModel internal constructor(
         viewModelScope.launch {
             while (pending.isNotEmpty()) {
                 val action = pending.first()
-                when (val result = repository.vocabularyAction(roundId, action.wordId, action.value)) {
+                when (val result = swipeVocabulary(roundId, action.wordId, action.value)) {
                     is ApiResult.Success -> {
                         val saved = result.data
                         if (saved.vocabularyId != action.wordId) {
@@ -356,13 +380,15 @@ class RoundViewModel internal constructor(
         submitting = true
         publish()
         viewModelScope.launch {
-            val result = repository.submitRound(roundId, emptyList())
+            val result = submitRound(roundId, emptyList())
             submitting = false
             finishRequested = false
             when (result) {
                 is ApiResult.Success -> {
                     clearNotices()
-                    mutableState.value = Round1UiState.Completed(result.data.totalQuestions, result.data.stars)
+                    mutableState.value = Round1UiState.Completed(
+                        result.data.totalQuestions, result.data.stars, resultId = ++resultSequence,
+                    )
                 }
                 is ApiResult.Failure -> when (result.error.type) {
                     ApiErrorType.ROUND_INCOMPLETE -> {
@@ -440,7 +466,8 @@ class RoundViewModel internal constructor(
                 audio = if (word.audioUrl.isBlank()) VocabularyAudioState.Unavailable else VocabularyAudioState.Ready,
                 hasPendingActions = pending.isNotEmpty(),
                 feedback = feedback,
-                syncError = syncError?.messageId()
+                syncError = syncError?.messageId(),
+                savedStars = savedStars,
             )
             words.isEmpty() -> Round1UiState.Empty
             else -> Round1UiState.Finishing(
@@ -452,7 +479,8 @@ class RoundViewModel internal constructor(
                 },
                 feedback = feedback,
                 errorMessage = (syncError ?: submitError)?.messageId() ?: R.string.round_error,
-                hasPendingActions = pending.isNotEmpty()
+                hasPendingActions = pending.isNotEmpty(),
+                savedStars = savedStars,
             )
         }
     }

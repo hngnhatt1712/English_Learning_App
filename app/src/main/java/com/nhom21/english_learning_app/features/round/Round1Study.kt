@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BookmarkAdd
 import androidx.compose.material.icons.rounded.Check
@@ -136,63 +138,69 @@ internal fun Round1Study(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        VocabularySwipeCard(
-            word = state.word.cardContent(),
-            audio = state.audio,
-            cardsBehind = state.remainingCardsBehind,
-            onAudio = { if (interactionEnabled) onAudio(state.word.id) },
-            modifier = Modifier.onSizeChanged { swipeWidth = it.width.coerceAtLeast(1).toFloat() },
-            cardModifier = Modifier.draggable(
-                state = drag,
-                orientation = Orientation.Horizontal,
-                enabled = canMove && !committing,
-                onDragStarted = {
-                    settleJob?.cancel()
-                    ticked = false
-                    touched = true
-                },
-                onDragStopped = { velocity ->
-                    val enoughDistance = abs(offset) >= cardThreshold
-                    val fling = abs(velocity) >= velocityThreshold && abs(offset) > cardThreshold / 5 &&
-                        (velocity > 0f) == (offset > 0f)
-                    if (enoughDistance || fling) {
-                        val action = when {
-                            offset < 0f -> Round1Action.Skip
-                            state.word.isInFlashcards -> Round1Action.KeepAdded
-                            else -> Round1Action.Add
+        Column(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            VocabularySwipeCard(
+                word = state.word.cardContent(),
+                audio = state.audio,
+                cardsBehind = state.remainingCardsBehind,
+                onAudio = { if (interactionEnabled) onAudio(state.word.id) },
+                modifier = Modifier.onSizeChanged { swipeWidth = it.width.coerceAtLeast(1).toFloat() },
+                cardModifier = Modifier.draggable(
+                    state = drag,
+                    orientation = Orientation.Horizontal,
+                    enabled = canMove && !committing,
+                    onDragStarted = {
+                        settleJob?.cancel()
+                        ticked = false
+                        touched = true
+                    },
+                    onDragStopped = { velocity ->
+                        val enoughDistance = abs(offset) >= cardThreshold
+                        val fling = abs(velocity) >= velocityThreshold && abs(offset) > cardThreshold / 5 &&
+                            (velocity > 0f) == (offset > 0f)
+                        if (enoughDistance || fling) {
+                            val action = when {
+                                offset < 0f -> Round1Action.Skip
+                                state.word.isInFlashcards -> Round1Action.KeepAdded
+                                else -> Round1Action.Add
+                            }
+                            commit(action)
+                        } else if (!committing) {
+                            returnCard()
                         }
-                        commit(action)
-                    } else if (!committing) {
-                        returnCard()
                     }
+                ).graphicsLayer {
+                    translationX = if (reducedMotion) 0f else offset
+                    rotationZ = if (reducedMotion) 0f else (offset / cardThreshold).coerceIn(-1f, 1f) * 12f
+                },
+                swipeFraction = (offset / cardThreshold).coerceIn(-1f, 1f),
+                imageContent = state.word.imageUrl?.let { url ->
+                    imageContent?.let { content -> { content(url) } }
                 }
-            ).graphicsLayer {
-                translationX = if (reducedMotion) 0f else offset
-                rotationZ = if (reducedMotion) 0f else (offset / cardThreshold).coerceIn(-1f, 1f) * 12f
-            },
-            swipeFraction = (offset / cardThreshold).coerceIn(-1f, 1f),
-            imageContent = state.word.imageUrl?.let { url ->
-                imageContent?.let { content -> { content(url) } }
-            }
-        )
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Text(
-                stringResource(R.string.round_swipe_hint),
-                style = RoundCaption,
-                color = roundColors().ink,
-                textAlign = TextAlign.Center
             )
-            if (showHand) {
-                Icon(
-                    Icons.Rounded.TouchApp,
-                    contentDescription = null,
-                    tint = roundColors().accentInk,
-                    modifier = Modifier.size(32.dp).graphicsLayer {
-                        translationX = 72.dp.toPx() * handOffset.value
-                        translationY = -36.dp.toPx()
-                        alpha = 1f - handOffset.value * 0.6f
-                    }
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(
+                    stringResource(R.string.round_swipe_hint),
+                    style = RoundCaption,
+                    color = roundColors().ink,
+                    textAlign = TextAlign.Center
                 )
+                if (showHand) {
+                    Icon(
+                        Icons.Rounded.TouchApp,
+                        contentDescription = null,
+                        tint = roundColors().accentInk,
+                        modifier = Modifier.size(32.dp).graphicsLayer {
+                            translationX = 72.dp.toPx() * handOffset.value
+                            translationY = -36.dp.toPx()
+                            alpha = 1f - handOffset.value * 0.6f
+                        }
+                    )
+                }
             }
         }
         Round1ActionButtons(

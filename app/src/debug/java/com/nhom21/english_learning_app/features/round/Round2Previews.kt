@@ -84,7 +84,7 @@ private fun ExitPreview() {
             Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.35f)))
             Box(Modifier.padding(24.dp).widthIn(max = 360.dp)) {
                 RoundExitDialogContent(
-                    body = stringResource(R.string.round2_leave_body),
+                body = stringResource(R.string.round_leave_default),
                     title = stringResource(R.string.round_leave_title),
                     keepLearningLabel = stringResource(R.string.round_keep_learning),
                     leaveLabel = stringResource(R.string.round_leave),

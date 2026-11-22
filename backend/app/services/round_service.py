@@ -1,4 +1,4 @@
-"""Round 1–2 read/check/submit and C1 orchestration; Sprint 5–6 writes only vocabulary."""
+"""Round 1–2 read/check/submit and C1 orchestration."""
 import random
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -36,7 +36,6 @@ from app.schemas.round import (
     VocabularyActionRequest,
     VocabularyActionResultDto,
 )
-from app.schemas.streak import StreakDto
 from app.services.level_progress_provider import get_user_level_progress
 from app.services.round_content import (
     content_error,
@@ -44,7 +43,7 @@ from app.services.round_content import (
     stored_payload,
     vocabulary_dto,
 )
-from app.services.streak_service import effective_streak, today_vn
+from app.services.streak_service import touch
 from app.services.topic_service import get_topic_states_for_level
 
 
@@ -174,6 +173,16 @@ class RoundService:
         return grade_choice(question, body.answer, "answer")
 
     def submit_round(self, user: User, round_id: UUID, body: SubmitRoundRequest) -> RoundResultDto:
+        try:
+            self.rounds.lock_submitter(user)
+            result = self._grade_and_record(user, round_id, body)
+            self.db.commit()
+            return result
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def _grade_and_record(self, user: User, round_id: UUID, body: SubmitRoundRequest) -> RoundResultDto:
         current = self._accessible_round(user, round_id)
         questions, payloads, _words, progress = self._round_content(user, current)
         if not questions:
@@ -205,16 +214,43 @@ class RoundService:
         else:
             raise invalid("roundId", "Round submission is not available for this type")
         percent, passed, stars = score(correct, len(questions))
-        today = today_vn()
+        return self._record_result(user, current.activity, len(questions), correct, percent, passed, stars, results)
+
+    def _record_result(
+        self, user: User, activity: Activity, total: int, correct: int, percent: float,
+        passed: bool, stars: int, results: list[QuestionResultDto],
+    ) -> RoundResultDto:
+        row = self.rounds.progress_for_submit(user.id, activity.id)
+        new_score = Decimal(str(percent))
+        new_best = row.best_score is None or new_score > row.best_score
+        first_pass = passed and row.status != "completed"
+        if new_best:
+            row.best_score = new_score
+        row.stars = max(row.stars, stars)
+        row.attempts += 1
+        if first_pass:
+            row.status = "completed"
+            row.completed_at = datetime.now(UTC)
+        elif row.status != "completed":
+            row.status = "unlocked"
+
+        next_id = None
+        if first_pass:
+            activities = self.rounds.get_by_lesson(activity.lesson_id)
+            following = next((a for a in activities if a.round_number == activity.round_number + 1), None)
+            if following is not None:
+                following_progress = self.rounds.progress_for_submit(user.id, following.id)
+                if following_progress.status == "locked":
+                    following_progress.status = "unlocked"
+                    next_id = following.id
         return RoundResultDto(
-            round_id=round_id, total_questions=len(questions), correct_count=correct,
+            round_id=activity.id, total_questions=total, correct_count=correct,
             score_percent=percent, passed=passed, stars=stars,
-            best_stars=current.metadata.stars, best_score_percent=current.metadata.best_score_percent,
-            attempts=current.metadata.attempts, is_new_best=False, results=results,
-            unlocks=UnlocksDto(next_round_id=None, topic_completed=False, next_topic_id=None,
+            best_stars=row.stars, best_score_percent=float(row.best_score) if row.best_score is not None else None,
+            attempts=row.attempts, is_new_best=new_best, results=results,
+            unlocks=UnlocksDto(next_round_id=next_id, topic_completed=False, next_topic_id=None,
                                level_completed=False, next_level_id=None),
-            streak=StreakDto(current=effective_streak(user.current_streak, user.last_learning_date, today),
-                             last_learning_date=user.last_learning_date, learned_today=user.last_learning_date == today),
+            streak=touch(user),
         )
 
     def vocabulary_action(

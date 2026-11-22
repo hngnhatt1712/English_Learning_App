@@ -99,29 +99,30 @@ def get_topic_state(
     raise AppError(404, ErrorType.NOT_FOUND, "Topic not found")
 
 
-def _topic_dto(state: TopicState) -> TopicDto:
-    """Share Topic fields and temporary Round statistics across both endpoints."""
+def _topic_dto(state: TopicState, totals: tuple[int, int] | None = None) -> TopicDto:
+    """Share Topic fields and user-owned Round statistics across both endpoints."""
     topic = state.topic
-    # TODO(sprint-7): Replace placeholder round progress
-    # with values derived from user_round_progress.
+    completed, stars = totals or (0, state.stars)
     return TopicDto(
         id=topic.id, level_id=topic.level_id, name=topic.name, description=topic.description,
-        order_index=topic.order_index, status=state.status, stars=state.stars,
-        max_stars=MAX_STARS_PER_TOPIC, rounds_completed=0, rounds_total=ROUNDS_PER_TOPIC,
-        progress_percent=0.0, theme_key=topic.theme_key or "default",
+        order_index=topic.order_index, status=state.status, stars=stars,
+        max_stars=MAX_STARS_PER_TOPIC, rounds_completed=completed, rounds_total=ROUNDS_PER_TOPIC,
+        progress_percent=completed * 100 / ROUNDS_PER_TOPIC, theme_key=topic.theme_key or "default",
     )
 
 
 def list_topics(db: Session, user_id: uuid.UUID, level_id: uuid.UUID) -> list[TopicDto]:
-    """Return topic DTOs with Round statistics deferred until Sprint 7."""
-    return [_topic_dto(state) for state in get_topic_states_for_level(db, user_id, level_id)]
+    states = get_topic_states_for_level(db, user_id, level_id)
+    totals = TopicRepository(db).round_totals(user_id, [state.topic.id for state in states])
+    return [_topic_dto(state, totals.get(state.topic.id)) for state in states]
 
 
 def get_topic_detail(db: Session, user_id: uuid.UUID, topic_id: uuid.UUID) -> TopicDetailDto:
     """Include actual lessons even for a locked topic; never fabricate content."""
     state = get_topic_state(db, user_id, topic_id)
     lessons = LessonRepository(db).get_by_topic_id(topic_id)
+    totals = TopicRepository(db).round_totals(user_id, [topic_id])
     return TopicDetailDto(
-        **_topic_dto(state).model_dump(),
+        **_topic_dto(state, totals.get(topic_id)).model_dump(),
         lessons=[LessonSummaryDto.model_validate(lesson) for lesson in lessons],
     )

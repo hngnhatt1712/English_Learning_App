@@ -3,7 +3,9 @@ import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from app.models.progress import UserTopicProgress
+from app.models.activity import Activity
+from app.models.lesson import Lesson
+from app.models.progress import UserRoundProgress, UserTopicProgress
 from app.models.topic import Topic
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
@@ -51,6 +53,18 @@ class TopicRepository:
             UserTopicProgress.topic_id.in_(topic_ids),
         )
         return {progress.topic_id: progress for progress in self.db.scalars(stmt).all()}
+
+    def round_totals(self, user_id: uuid.UUID, topic_ids: Sequence[uuid.UUID]) -> dict[uuid.UUID, tuple[int, int]]:
+        stmt = (
+            select(Lesson.topic_id, func.count().filter(UserRoundProgress.status == "completed"),
+                   func.sum(UserRoundProgress.stars))
+            .select_from(UserRoundProgress)
+            .join(Activity, Activity.id == UserRoundProgress.round_id)
+            .join(Lesson, Lesson.id == Activity.lesson_id)
+            .where(UserRoundProgress.user_id == user_id, Lesson.topic_id.in_(topic_ids))
+            .group_by(Lesson.topic_id)
+        )
+        return {topic_id: (completed, stars) for topic_id, completed, stars in self.db.execute(stmt)}
 
     def get_counts_by_level(self) -> dict[uuid.UUID, int]:
         """Count content topics for all levels in one grouped query."""

@@ -1,4 +1,4 @@
-"""Fixed-batch content and user-filtered Round reads; no business rules here."""
+"""Round content and user-owned progress storage."""
 from collections.abc import Sequence
 from uuid import UUID
 
@@ -10,11 +10,23 @@ from app.models.lesson import Lesson
 from app.models.progress import UserRoundProgress
 from app.models.question import Question
 from app.models.topic import Topic
+from app.models.user import User
 
 
 class RoundRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
+
+    def lock_submitter(self, user: User) -> None:
+        # Serialize submissions for this user, including first inserts and streak writes.
+        self.db.refresh(user, with_for_update=True)
+
+    def progress_for_submit(self, user_id: UUID, round_id: UUID) -> UserRoundProgress:
+        row = self.db.get(UserRoundProgress, (user_id, round_id))
+        if row is None:
+            row = UserRoundProgress(user_id=user_id, round_id=round_id, status="locked", attempts=0, stars=0)
+            self.db.add(row)
+        return row
 
     def get_context(self, round_id: UUID) -> tuple[Activity, Lesson, Topic] | None:
         row = self.db.execute(

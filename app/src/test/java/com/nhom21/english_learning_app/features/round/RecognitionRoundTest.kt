@@ -6,6 +6,10 @@ import com.nhom21.english_learning_app.core.network.ApiResult
 import com.nhom21.english_learning_app.core.network.InMemoryPreferencesDataStore
 import com.nhom21.english_learning_app.data.repository.RoundRepository
 import com.nhom21.english_learning_app.domain.model.*
+import com.nhom21.english_learning_app.domain.usecase.CheckAnswerUseCase
+import com.nhom21.english_learning_app.domain.usecase.GetRoundUseCase
+import com.nhom21.english_learning_app.domain.usecase.SubmitRoundUseCase
+import com.nhom21.english_learning_app.domain.usecase.SwipeVocabularyUseCase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +27,14 @@ import org.junit.Test
 class RecognitionRoundTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = RecognitionRepository()
-    private fun model() = RoundViewModel("selected-round", repository, InMemoryPreferencesDataStore())
+    private fun model() = RoundViewModel(
+        roundId = "selected-round",
+        getRound = GetRoundUseCase(repository),
+        submitRound = SubmitRoundUseCase(repository),
+        swipeVocabulary = SwipeVocabularyUseCase(repository),
+        checkAnswer = CheckAnswerUseCase(repository),
+        preferences = InMemoryPreferencesDataStore(),
+    )
     private val RoundViewModel.current get() = uiState.value as Round2UiState.Question
 
     @Before fun setup() = Dispatchers.setMain(dispatcher)
@@ -36,6 +47,7 @@ class RecognitionRoundTest {
         assertEquals("Chọn nghĩa của book", model.current.question.prompt)
         assertEquals(listOf("b", "a"), model.current.question.options.map { it.id })
         assertEquals(3, model.current.total)
+        assertEquals(2, model.current.savedStars)
         model.selectOption("meaning", "b")
         model.checkOption("meaning")
         model.checkOption("meaning")
@@ -47,6 +59,7 @@ class RecognitionRoundTest {
         assertEquals(Round2Feedback(false, "a"), model.current.feedback)
         model.nextQuestion("meaning")
         model.nextQuestion("meaning")
+        assertEquals(2, model.current.savedStars)
         assertEquals("Chọn từ có nghĩa là sách", model.current.question.prompt)
         model.selectOption("word", "a")
         model.checkOption("word")
@@ -164,7 +177,7 @@ class RecognitionRoundTest {
         override suspend fun getRound(roundId: String): ApiResult<RoundDetail> {
             loads.add(roundId)
             return ApiResult.Success(RoundDetail(RoundSummary(roundId, "lesson", 2, RoundType.RECOGNITION,
-                null, ContentStatus.UNLOCKED, 0, null, 0, questions.size), questions))
+                null, ContentStatus.UNLOCKED, 2, null, 0, questions.size), questions))
         }
 
         override suspend fun checkAnswer(questionId: String, answer: Answer): ApiResult<QuestionResult> {

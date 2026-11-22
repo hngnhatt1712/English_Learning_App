@@ -57,7 +57,34 @@ class LessonViewModel @Inject constructor(
         loadInitial()
     }
 
-    fun onRetry() = loadInitial()
+    private var failedRoundRefresh: String? = null
+
+    fun onRetry() {
+        failedRoundRefresh?.let(::refreshRound) ?: loadInitial()
+    }
+
+    fun refreshRound(roundId: String) {
+        val section = _uiState.value.topics.firstOrNull { topic -> topic.rounds.any { it.roundId == roundId } }
+            ?: return
+        val lessonId = section.lessonId ?: return
+        val levelId = selectedLevelId ?: return
+        failedRoundRefresh = null
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            val detail = getTopicDetail(section.topicId)
+            val lesson = getLesson(lessonId)
+            if (detail !is ApiResult.Success || lesson !is ApiResult.Success) {
+                failedRoundRefresh = roundId
+                eventChannel.send(LessonEvent.RefreshFailed)
+                return@launch
+            }
+            val updated = detail.data.topic.toSection(lessonId, section.themeKey ?: "default", lesson.data.rounds)
+            val topics = _uiState.value.topics.map { if (it.topicId == section.topicId) updated else it }
+            cache[levelId] = topics
+            publishTopics(topics)
+        }
+    }
+
     fun refresh() {
         cache.clear()
         selectedLevelId?.let { loadLevel(it, switching = false) } ?: loadInitial()
@@ -70,6 +97,7 @@ class LessonViewModel @Inject constructor(
             return
         }
         if (levelId == selectedLevelId) return
+        failedRoundRefresh = null
         loadLevel(levelId, switching = true)
     }
 

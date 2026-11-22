@@ -6,8 +6,6 @@
     <string name="round_title">Round 1</string>
     <string name="round_learn_words">Học từ vựng</string>
     <string name="round_words_progress">%1$d/%2$d từ</string>
-    <string name="round_progress_milestone">%1$d%%</string>
-    <string name="round_progress_label">Word progress milestones</string>
     <string name="round_skip">Bỏ qua</string>
     <string name="round_add">Thêm vào Flashcard</string>
     <string name="round_added">Đã có</string>
@@ -39,13 +37,10 @@
     <string name="round_result_added">Added to Flashcards: %1$d</string>
     <string name="round_result_skipped">Skipped: %1$d</string>
     <string name="round_continue">Continue</string>
-    <string name="round_leave_title">Leave this round?</string>
-    <string name="round_keep_learning">Keep learning</string>
-    <string name="round_leave">Leave</string>
-    <string name="round_leave_default">Your work in this round may not be saved.</string>
-    <string name="round_leave_saved">Các từ đã lưu sẽ được giữ lại.</string>
-    <string name="round_leave_pending">Một số thao tác chưa lưu. Rời vòng có thể làm mất các thao tác này.</string>
-    <string name="round_leave_local">You can try these words again.</string>
+    <string name="round_leave_title">Thoát bài này?</string>
+    <string name="round_keep_learning">Ở lại</string>
+    <string name="round_leave">Thoát</string>
+    <string name="round_leave_default">Tiến độ round hiện tại sẽ không được lưu</string>
     <string name="round_pos_noun">n</string>
     <string name="round_pos_verb">v</string>
     <string name="round_pos_adjective">adj</string>

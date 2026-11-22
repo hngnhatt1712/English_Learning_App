@@ -8,6 +8,10 @@ import com.nhom21.english_learning_app.data.remote.dto.HomeLevelDto
 import com.nhom21.english_learning_app.data.repository.HomeRepository
 import com.nhom21.english_learning_app.data.repository.LevelRepository
 import com.nhom21.english_learning_app.data.repository.TopicRepository
+import com.nhom21.english_learning_app.core.network.ApiErrorType
+import com.nhom21.english_learning_app.core.network.ApiFailure
+import com.nhom21.english_learning_app.domain.model.RoundSummary
+import com.nhom21.english_learning_app.domain.model.RoundType
 import com.nhom21.english_learning_app.domain.model.ContentStatus
 import com.nhom21.english_learning_app.domain.model.LessonDetail
 import com.nhom21.english_learning_app.domain.model.LessonSummary
@@ -53,6 +57,31 @@ class LessonViewModelTest {
         assertFalse(state.topics.first().isLocked)
         assertNotNull(state.currentRoundKey)
     }
+
+    @Test
+    fun retryRefreshUpdatesBothTopicAndRoundFromServer() = runTest {
+        val repo = FakeTopicRepository()
+        val vm = LessonViewModel(GetLevelsUseCase(FakeLevelRepository()), GetTopicsUseCase(repo),
+            GetTopicDetailUseCase(repo), GetLessonUseCase(repo), FakeHomeRepository(), SavedStateHandle())
+        advanceUntilIdle()
+        val before = vm.uiState.value
+        repo.completed = true
+        repo.offline = true
+        vm.refreshRound("round-1")
+        advanceUntilIdle()
+        assertEquals(before, vm.uiState.value)
+        repo.offline = false
+        vm.onRetry()
+        advanceUntilIdle()
+        val section = vm.uiState.value.topics.first()
+        assertEquals(3, section.stars)
+        assertEquals(1, section.roundsCompleted)
+        assertEquals(20, section.progressPercent)
+        assertEquals(3, section.rounds.first().stars)
+        vm.onRoundClick(section.rounds[1].key)
+        assertEquals("round-2", vm.uiState.value.preview?.round?.roundId)
+    }
+
 }
 
 private class FakeLevelRepository : LevelRepository {
@@ -72,6 +101,8 @@ private class FakeHomeRepository : HomeRepository {
 
 private class FakeTopicRepository : TopicRepository {
     var lessonCalls = 0
+    var completed = false
+    var offline = false
 
     private val topics = listOf(
         topic("topic-1", "Self & Family", "family", ContentStatus.UNLOCKED, 1),
@@ -83,12 +114,18 @@ private class FakeTopicRepository : TopicRepository {
 
     override suspend fun getTopicDetail(topicId: String): ApiResult<TopicDetail> {
         val topic = topics.first { it.id == topicId }
-        return ApiResult.Success(TopicDetail(topic, listOf(LessonSummary("lesson-1", topicId, topic.name, null, 1))))
+        return ApiResult.Success(TopicDetail(if (completed) topic.copy(stars = 3, roundsCompleted = 1, progressPercent = 20.0) else topic, listOf(LessonSummary("lesson-1", topicId, topic.name, null, 1))))
     }
 
     override suspend fun getLesson(lessonId: String): ApiResult<LessonDetail> {
         lessonCalls += 1
-        return ApiResult.Success(LessonDetail(LessonSummary(lessonId, "topic-1", "Lesson", null, 1), emptyList()))
+        if (offline) return ApiResult.Failure(ApiFailure(ApiErrorType.NETWORK, "offline"))
+        val first = RoundSummary("round-1", lessonId, 1, RoundType.LEARN, null,
+            if (completed) ContentStatus.COMPLETED else ContentStatus.UNLOCKED,
+            if (completed) 3 else 0, null, 0, 10)
+        val second = RoundSummary("round-2", lessonId, 2, RoundType.RECOGNITION, null,
+            if (completed) ContentStatus.UNLOCKED else ContentStatus.LOCKED, 0, null, 0, 10)
+        return ApiResult.Success(LessonDetail(LessonSummary(lessonId, "topic-1", "Lesson", null, 1), listOf(first, second)))
     }
 
     private fun topic(id: String, name: String, theme: String, status: ContentStatus, order: Int) = Topic(
