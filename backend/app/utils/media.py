@@ -14,16 +14,19 @@ def validate_media_path(value: str) -> str:
     return value
 
 
-def validate_media_base(value: str) -> str:
+def validate_media_base(value: str, *, environment: str = "production") -> str:
     parsed = urlsplit(value)
     if (
         not parsed.hostname or parsed.username or parsed.password
         or parsed.query or parsed.fragment or not value.endswith("/")
         or parsed.scheme not in ("https", "http")
-        or (parsed.scheme == "http" and parsed.hostname != "10.0.2.2")
+        or (parsed.scheme == "http" and not (
+            environment.strip().lower() in ("dev", "development")
+            and parsed.hostname in ("10.0.2.2", "192.168.1.9")
+        ))
         or "\\" in value
     ):
-        raise ValueError("MEDIA_BASE_URL must end in / and use HTTPS (HTTP only for 10.0.2.2 dev)")
+        raise ValueError("MEDIA_BASE_URL must end in / and use HTTPS (HTTP allowed for configured dev hosts)")
     # Validate the port as well; urlsplit defers that check.
     _ = parsed.port
     return value
@@ -34,4 +37,4 @@ def media_url(path: str | None) -> str | None:
         return None
     from app.core.config import settings
 
-    return validate_media_base(settings.MEDIA_BASE_URL) + validate_media_path(path)
+    return validate_media_base(settings.MEDIA_BASE_URL, environment=settings.ENV) + validate_media_path(path)

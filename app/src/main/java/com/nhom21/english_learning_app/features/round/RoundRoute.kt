@@ -2,13 +2,16 @@ package com.nhom21.english_learning_app.features.round
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-internal fun RoundRoute(onExit: () -> Unit, viewModel: RoundViewModel = hiltViewModel()) {
+internal fun RoundRoute(onExit: () -> Unit, onSubmitted: () -> Unit, viewModel: RoundViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val completed = state is Round1UiState.Completed || state is Round2UiState.Completed
+    LaunchedEffect(completed) { if (completed) onSubmitted() }
     when (val current = state) {
         Round1UiState.Locked -> RoundStatus(RoundMessage.Locked, onExit, viewModel::retry)
         Round1UiState.Error -> RoundStatus(RoundMessage.LoadFailed, onExit, viewModel::retry)

@@ -102,6 +102,13 @@ fun LessonScreen(
                     val index = itemIndexForTopic(uiState.topics, event.topicId)
                     if (index >= 0) listState.animateScrollToItem(index)
                 }
+                LessonEvent.RefreshFailed -> {
+                    val action = snackbar.showSnackbar(
+                        context.getString(R.string.lesson_refresh_failed),
+                        actionLabel = context.getString(R.string.lesson_try_again),
+                    )
+                    if (action == androidx.compose.material3.SnackbarResult.ActionPerformed) onRetry()
+                }
                 is LessonEvent.ShowMessage -> snackbar.showSnackbar(context.getString(event.resId))
             }
         }

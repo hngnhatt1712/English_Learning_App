@@ -14,7 +14,8 @@ internal data class RoundColors(
     val primaryFace: Color,
     val primaryBase: Color,
     val primaryLabel: Color,
-    val successInk: Color
+    val successInk: Color,
+    val dangerInk: Color,
 )
 
 @Composable
@@ -32,6 +33,7 @@ internal fun roundColors(): RoundColors {
         primaryFace = OwlaColors.PrimaryBase,
         primaryBase = OwlaColors.PrimaryShadow,
         primaryLabel = OwlaColors.LightTextPrimary,
-        successInk = if (dark) OwlaColors.SuccessBase else lerp(OwlaColors.SuccessShadow, ink, 0.36f)
+        successInk = if (dark) OwlaColors.SuccessBase else lerp(OwlaColors.SuccessShadow, ink, 0.36f),
+        dangerInk = if (dark) OwlaColors.DangerBase else lerp(OwlaColors.DangerShadow, ink, 0.2f),
     )
 }

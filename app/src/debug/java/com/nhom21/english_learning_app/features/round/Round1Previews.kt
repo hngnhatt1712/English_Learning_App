@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.features.round.components.RoundExitDialogContent
 import com.nhom21.english_learning_app.features.round.components.RoundHeading
-import com.nhom21.english_learning_app.features.round.components.RoundWordProgress
+import com.nhom21.english_learning_app.core.ui.components.ProgressPill
 import com.nhom21.english_learning_app.core.ui.components.VocabularySwipeCard
 import com.nhom21.english_learning_app.ui.theme.roundColors
 import com.nhom21.english_learning_app.ui.theme.English_Learning_AppTheme
@@ -75,7 +75,7 @@ private fun SwipePreview(fraction: Float) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             RoundHeading(stringResource(R.string.round_title), stringResource(R.string.round_learn_words), {})
-            RoundWordProgress(3, 10)
+            ProgressPill(3, 10, stringResource(R.string.round_words_progress, 3, 10), stars = 0)
             VocabularySwipeCard(
                 word = round1DemoWords.first().cardContent(),
                 audio = VocabularyAudioState.Ready,
@@ -103,7 +103,7 @@ private fun ExitDialogPreview() {
         Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.35f)))
         Box(Modifier.padding(24.dp).widthIn(max = 360.dp)) {
             RoundExitDialogContent(
-                stringResource(R.string.round_leave_saved),
+                stringResource(R.string.round_leave_default),
                 stringResource(R.string.round_leave_title),
                 stringResource(R.string.round_keep_learning),
                 stringResource(R.string.round_leave),

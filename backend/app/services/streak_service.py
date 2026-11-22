@@ -1,16 +1,11 @@
-"""Streak read helpers — contract section 9.3.
-
-Rules (read path only; write / touch() is Sprint 7):
-- today_vn(now): convert aware datetime to Asia/Ho_Chi_Minh date.
-- effective_streak(current, last, today): return 0 when last is None or
-  gap >= 2 days; otherwise return current unchanged.
-
-NOTE: config.py has no APP_TIMEZONE variable — using module constant (D-16).
-"""
+"""Learning streak transitions in Asia/Ho_Chi_Minh (contract 9.3)."""
 from __future__ import annotations
 
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
+
+from app.models.user import User
+from app.schemas.streak import StreakDto
 
 # D-16: config.py does not expose a timezone variable; use module constant.
 APP_TIMEZONE = "Asia/Ho_Chi_Minh"
@@ -66,3 +61,12 @@ def effective_streak(current: int, last: date | None, today: date) -> int:
     if gap >= 2:
         return 0
     return current
+
+
+def touch(user: User) -> StreakDto:
+    today = today_vn()
+    if user.last_learning_date != today:
+        yesterday = user.last_learning_date is not None and (today - user.last_learning_date).days == 1
+        user.current_streak = user.current_streak + 1 if yesterday else 1
+        user.last_learning_date = today
+    return StreakDto(current=user.current_streak, last_learning_date=today, learned_today=True)

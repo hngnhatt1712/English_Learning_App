@@ -23,6 +23,10 @@ import com.nhom21.english_learning_app.domain.model.Vocabulary
 import com.nhom21.english_learning_app.domain.model.VocabularyAction
 import com.nhom21.english_learning_app.domain.model.VocabularyActionResult
 import com.nhom21.english_learning_app.domain.model.VocabularyStatus
+import com.nhom21.english_learning_app.domain.usecase.CheckAnswerUseCase
+import com.nhom21.english_learning_app.domain.usecase.GetRoundUseCase
+import com.nhom21.english_learning_app.domain.usecase.SubmitRoundUseCase
+import com.nhom21.english_learning_app.domain.usecase.SwipeVocabularyUseCase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -147,6 +151,7 @@ class RoundViewModelTest {
         assertEquals(1, model.learning.processedWords)
         assertEquals(0, model.learning.remainingCardsBehind)
         assertEquals(2, repository.fetches)
+        assertEquals(1, model.learning.savedStars)
         assertEquals(2, repository.actions.size)
         assertTrue(repository.submissions.all { it.isEmpty() })
     }
@@ -165,8 +170,14 @@ class RoundViewModelTest {
         advanceUntilIdle()
     }
 
-    private fun viewModel(repository: RoundRepository) =
-        RoundViewModel("round", repository, preferences)
+    private fun viewModel(repository: RoundRepository) = RoundViewModel(
+        roundId = "round",
+        getRound = GetRoundUseCase(repository),
+        submitRound = SubmitRoundUseCase(repository),
+        swipeVocabulary = SwipeVocabularyUseCase(repository),
+        checkAnswer = CheckAnswerUseCase(repository),
+        preferences = preferences,
+    )
 
     private val RoundViewModel.learning get() = uiState.value as Round1UiState.Learning
     private val RoundViewModel.finishing get() = uiState.value as Round1UiState.Finishing
@@ -192,7 +203,7 @@ class RoundViewModelTest {
             fetches++
             getError?.let { return failure(it) }
             val round = RoundSummary(roundId, "lesson", 1, RoundType.LEARN, null,
-                ContentStatus.UNLOCKED, 0, null, 0, words.size)
+                ContentStatus.UNLOCKED, 1, null, 0, words.size)
             val cards = words.values.mapIndexed { index, word ->
                 Question("q-${word.id}", index + 1, word.word, null, null, QuestionContent.LearnCard(word))
             }

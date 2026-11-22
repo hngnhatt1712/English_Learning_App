@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="round_saved_stars">%1$d sao</string>
+    <string name="feedback_correct">Chính xác!</string>
+    <string name="feedback_wrong">Chưa đúng</string>
+    <string name="feedback_correct_answer">Đáp án đúng: %1$s</string>
+    <string name="feedback_explanation">Vì sao?</string>
+    <string name="feedback_continue">Tiếp tục</string>
+    <string name="answer_option_correct">Đáp án đúng</string>
+    <string name="answer_option_wrong">Đáp án sai</string>
+</resources>

@@ -23,7 +23,8 @@ internal fun Round1CompletionScreen(
     onContinue: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    RoundCompletionScreen(
+    RoundResultScreen(
+        resultId = result.resultId,
         summary = stringResource(R.string.round_learned_words, result.learnedWords),
         stars = result.stars,
         actionLabel = stringResource(R.string.round_continue),

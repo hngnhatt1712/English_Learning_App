@@ -19,6 +19,7 @@ internal sealed interface Round2UiState : RoundUiState {
         val checking: Boolean = false,
         val checkError: ApiErrorType? = null,
         val networkFailures: Int = 0,
+        val savedStars: Int = 0,
     ) : Round2UiState
 
     data class Completed(
@@ -29,6 +30,7 @@ internal sealed interface Round2UiState : RoundUiState {
         val scorePercent: Double? = null,
         val unlocks: RoundUnlocks? = null,
         val streak: Streak? = null,
+        val resultId: Long = 0,
     ) : Round2UiState
 }
 

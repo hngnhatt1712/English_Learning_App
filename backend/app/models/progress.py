@@ -73,7 +73,7 @@ class UserTopicProgress(Base):
 
 
 class UserRoundProgress(Base):
-    """Stored progress only; submit writes, best-score retention and unlocks belong to Sprint 7."""
+    """Best recorded result and first completion for one user and Round."""
 
     __tablename__ = "user_round_progress"
     __table_args__ = (
@@ -104,7 +104,7 @@ class UserRoundProgress(Base):
     best_score: Mapped[Decimal | None] = mapped_column(Numeric(4, 1), nullable=True, default=None)
     stars: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
-    # First completion time: future submit service sets and preserves this value.
+    # First completion time: set once by submit.
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now(),

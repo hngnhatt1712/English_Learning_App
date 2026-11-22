@@ -67,4 +67,5 @@
     <string name="lesson_round_matching">Ghép cặp</string>
     <string name="lesson_round_application">Vận dụng</string>
     <string name="lesson_round_final_review">Ôn tập cuối</string>
+    <string name="lesson_refresh_failed">Chưa tải được tiến độ mới.</string>
 </resources>

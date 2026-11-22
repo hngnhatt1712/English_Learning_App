@@ -2,21 +2,13 @@
 <resources>
     <string name="round2_title">Round 2</string>
     <string name="round2_question_number">Câu %1$d/%2$d</string>
-    <string name="round2_progress">Đã làm %1$d/%2$d câu</string>
     <string name="round2_choose_meaning">Chọn nghĩa</string>
     <string name="round2_choose_word">Chọn từ</string>
     <string name="round2_choose_answer">Chọn đáp án</string>
     <string name="round2_choose_picture">Chọn hình</string>
     <string name="round2_picture_option">Hình %1$d</string>
-    <string name="round2_option_correct">Đáp án đúng</string>
-    <string name="round2_option_wrong">Đáp án sai</string>
     <string name="round2_check">Kiểm tra</string>
     <string name="round2_checking">Đang kiểm tra…</string>
-    <string name="round2_continue">Tiếp tục</string>
-    <string name="round2_correct">Chính xác!</string>
-    <string name="round2_wrong">Chưa đúng</string>
-    <string name="round2_correct_answer">Đáp án đúng: %1$s</string>
-    <string name="round2_leave_body">Rời vòng sẽ mất các lựa chọn của lượt này.</string>
     <string name="round2_result">Đúng %1$d/%2$d câu</string>
     <string name="round2_network_error">Mất kết nối. Chạm để thử lại</string>
     <string name="round2_skip_feedback">Tiếp tục không xem đáp án</string>
