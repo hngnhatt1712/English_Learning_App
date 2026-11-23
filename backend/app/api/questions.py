@@ -6,12 +6,12 @@ from fastapi import APIRouter, Path
 
 from app.core.dependencies import CurrentUser, RoundServiceDep
 from app.core.schemas import ApiResponse, ok
-from app.schemas.question import CheckAnswerRequest, QuestionResultDto
+from app.schemas.question import CheckAnswerRequest, CheckQuestionResultDto
 
 router = APIRouter(prefix="/questions", tags=["questions"])
 
 
-@router.post("/{questionId}/check", response_model=ApiResponse[QuestionResultDto], responses={
+@router.post("/{questionId}/check", response_model=ApiResponse[CheckQuestionResultDto], responses={
     401: {"model": ApiResponse[None], "description": "unauthorized"},
     403: {"model": ApiResponse[None], "description": "round-locked; unavailable sources fail closed (forbidden)"},
     404: {"model": ApiResponse[None], "description": "not-found"},

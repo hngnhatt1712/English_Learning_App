@@ -179,12 +179,15 @@ def register_handlers(app: FastAPI) -> None:
             location = list(error["loc"][1:])
             # Pydantic inserts the discriminator tag into locations of a union
             # variant. It is not a JSON key: answer.multiple_choice.optionId
-            # must be reported as answer.optionId (contract dot notation).
+            # becomes answer.optionId, and Translate also has an input mode tag.
             for index in range(len(location) - 1, 0, -1):
-                if location[index - 1] == "answer" and location[index] in {
-                    "multiple_choice", "picture_choice", "matching", "fill_blank", "translate",
-                    "sentence_order", "sentence_correction", "sentence_completion",
-                }:
+                tag = location[index]
+                if (
+                    location[index - 1] == "answer" and tag in {
+                        "multiple_choice", "picture_choice", "matching", "fill_blank", "translate",
+                        "sentence_order", "sentence_correction", "sentence_completion",
+                    }
+                ) or (index >= 2 and location[index - 2:index] == ["answer", "translate"] and tag in {"tokenIds", "text"}):
                     location.pop(index)
             code = _CODE_MAP.get(error["type"], "INVALID_VALUE")
             if error["type"] in ("union_tag_invalid", "union_tag_not_found"):

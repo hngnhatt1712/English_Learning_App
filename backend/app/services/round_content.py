@@ -40,6 +40,11 @@ def stored_payload(question: Question) -> QuestionPayload:
         raise content_error() from None
 
 
+def scoring_units(payload: QuestionPayload) -> int:
+    """Count each left item in validated Matching content, or one unit for any other question."""
+    return len(payload.left) if isinstance(payload, MatchingPayload) else 1
+
+
 def vocabulary_dto(word: Vocabulary, progress: UserVocabularyProgress | None) -> VocabularyDto:
     try:
         if not word.phonetic.strip() or not word.audio_url:
@@ -91,7 +96,7 @@ def question_dto(
             data["right"] = right
         elif isinstance(payload, FillBlankPayload):
             data.update(sentence=payload.sentence, word_bank=payload.word_bank)
-        elif isinstance(payload, SentenceOrderPayload):
+        elif isinstance(payload, (SentenceOrderPayload, TranslatePayload)):
             tokens = [{"id": item.id, "text": item.text} for item in payload.tokens]
             random.shuffle(tokens)
             data["tokens"] = tokens

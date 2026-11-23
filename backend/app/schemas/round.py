@@ -6,7 +6,12 @@ from pydantic import Field
 
 from app.core.schemas import CamelModel
 from app.schemas.lesson import RoundDto
-from app.schemas.question import AnswerBase, AnswerDto, QuestionDto, QuestionResultDto
+from app.schemas.question import (
+    AnswerBase,
+    QuestionDto,
+    SubmitAnswerDto,
+    SubmitQuestionResultDto,
+)
 from app.schemas.streak import StreakDto
 from app.schemas.vocabulary import VocabularyStatus
 
@@ -17,7 +22,7 @@ class RoundDetailDto(RoundDto):
 
 class SubmitRoundAnswer(AnswerBase):
     question_id: UUID
-    answer: AnswerDto
+    answer: SubmitAnswerDto
 
 
 class SubmitRoundRequest(AnswerBase):
@@ -44,7 +49,7 @@ class RoundResultDto(CamelModel):
     best_score_percent: float | None = Field(ge=0, le=100)
     is_new_best: bool
     attempts: int = Field(ge=0)
-    results: list[QuestionResultDto]
+    results: list[SubmitQuestionResultDto]
     unlocks: UnlocksDto
     streak: StreakDto
 
