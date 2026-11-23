@@ -91,6 +91,7 @@ fun ForgotPasswordResetStep(
             value = uiState.newPassword,
             onValueChange = onNewPasswordChange,
             modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading,
             placeholder = {
                 Text(
                     text = "Mật khẩu mới",
@@ -144,6 +145,7 @@ fun ForgotPasswordResetStep(
             value = uiState.confirmNewPassword,
             onValueChange = onConfirmNewPasswordChange,
             modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading,
             placeholder = {
                 Text(
                     text = "Xác nhận mật khẩu mới",
@@ -206,6 +208,7 @@ fun ForgotPasswordResetStep(
                 onResetPasswordClick()
             },
             isLoading = uiState.isLoading,
+            enabled = !uiState.isLoading,
             baseColor = deepTealColor,
             shadowColor = Color(0xFF02474B)
         )

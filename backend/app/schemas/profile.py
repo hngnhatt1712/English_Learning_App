@@ -2,13 +2,12 @@
 from typing import Any, cast
 from uuid import UUID
 
-from pydantic import ConfigDict, Field, model_validator
-
 from app.core.schemas import CamelModel
 from app.schemas.types import USERNAME_MAX, USERNAME_MIN, USERNAME_PATTERN, UtcDatetime
+from pydantic import ConfigDict, Field, model_validator
 
 
-class ProfileLevelDto(CamelModel):
+class LevelBriefDto(CamelModel):
     id: UUID
     name: str
     stars: int = Field(ge=0)
@@ -16,11 +15,15 @@ class ProfileLevelDto(CamelModel):
     progress_percent: float = Field(ge=0, le=100)
 
 
+# Keep existing Profile callers compatible with the shared contract schema.
+ProfileLevelDto = LevelBriefDto
+
+
 class ProfileDto(CamelModel):
     id: UUID
     username: str
     email: str
-    level: ProfileLevelDto | None
+    level: LevelBriefDto | None
     total_stars: int = Field(ge=0)
     max_stars: int = Field(ge=0)
     current_streak: int = Field(ge=0)

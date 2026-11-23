@@ -32,9 +32,16 @@ data class CurrentTopicDto(
     val name: String = "Food and drinks",
     val topicOrder: Int = 1,
     val lessonId: String? = null,
-    val round: Int = 1,
+    val round: HomeRoundDto? = null,
     val roundsTotal: Int = 5,
     val progressPercent: Float = 0f
+)
+
+@Serializable
+data class HomeRoundDto(
+    val id: String,
+    val roundNumber: Int,
+    val type: String,
 )
 
 /**

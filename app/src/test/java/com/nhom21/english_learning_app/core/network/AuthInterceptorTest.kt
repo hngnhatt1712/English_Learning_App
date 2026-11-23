@@ -112,6 +112,29 @@ class AuthInterceptorTest {
     }
 
     @Test
+    fun intercept_forgotAndResetPasswordEndpoints_doNotAttachHeaderEvenWithToken() = testScope.runTest {
+        tokenManager.saveToken("existing_token")
+        val okBody = """{"status":true,"message":"OK","data":null,"error":null}"""
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(okBody))
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(okBody))
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(okBody))
+
+        val paths = listOf(
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/forgot-password/verify-otp",
+            "/api/v1/auth/reset-password"
+        )
+        for (p in paths) {
+            val req = Request.Builder()
+                .url(mockWebServer.url(p))
+                .build()
+            client.newCall(req).execute().close()
+            val recorded = mockWebServer.takeRequest()
+            assertNull("Path $p must not attach Authorization header", recorded.getHeader("Authorization"))
+        }
+    }
+
+    @Test
     fun intercept_401Unauthorized_clearsTokenAndNotifiesSessionExpired() = testScope.runTest {
         tokenManager.saveToken("expired_token")
         val errorBody = """

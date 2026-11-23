@@ -4,20 +4,19 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
-
 from app.core.errors import AppError, ErrorType
 from app.repositories.level_repository import LevelRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.profile import ProfileDto, ProfileLevelDto, ProfileUpdateRequest
 from app.services.auth_service import assert_valid_username, normalize_username
+from app.services.level_progress_provider import get_user_level_progress
 from app.services.level_service import (
     MAX_STARS_PER_LEVEL,
     MAX_STARS_TOTAL,
-    is_level_unlocked,
 )
 from app.services.streak_service import effective_streak, today_vn
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 # Sprint 3 placeholders: real values come from progress data in Sprint 4-7.
 PLACEHOLDER_STARS: int = 0
@@ -77,12 +76,12 @@ def update_profile(
 
     new_level_id = None
     if "selected_level_id" in fields:
-        levels = levels_repo.get_all()
+        snapshot = get_user_level_progress(session, user, level_repo=levels_repo)
         target = payload.selected_level_id
         assert target is not None  # Schema ensures non-null if in model_fields_set
-        if target not in {level.id for level in levels}:
+        if target not in snapshot.statuses:
             raise AppError(404, ErrorType.NOT_FOUND, "Level not found")
-        if not is_level_unlocked(target, levels, user.selected_level_id):
+        if not snapshot.is_unlocked(target):
             raise AppError(403, ErrorType.LEVEL_LOCKED, "Level is locked")
         new_level_id = target
 

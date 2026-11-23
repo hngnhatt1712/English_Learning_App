@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="round2_title">Round 2</string>
+    <string name="round2_question_number">Câu %1$d/%2$d</string>
+    <string name="round2_choose_meaning">Chọn nghĩa</string>
+    <string name="round2_choose_word">Chọn từ</string>
+    <string name="round2_choose_answer">Chọn đáp án</string>
+    <string name="round2_choose_picture">Chọn hình</string>
+    <string name="round2_picture_option">Hình %1$d</string>
+    <string name="round2_check">Kiểm tra</string>
+    <string name="round2_checking">Đang kiểm tra…</string>
+    <string name="round2_result">Đúng %1$d/%2$d câu</string>
+    <string name="round2_network_error">Mất kết nối. Chạm để thử lại</string>
+    <string name="round2_skip_feedback">Tiếp tục không xem đáp án</string>
+    <string name="round2_invalid_answer">Đáp án không hợp lệ. Hãy kiểm tra lại lựa chọn.</string>
+    <string name="round2_request_failed">Chưa nhận được phản hồi. Hãy thử lại.</string>
+    <string name="round2_submitting">Đang nộp bài…</string>
+    <string name="round2_empty">Vòng này chưa có câu hỏi.</string>
+    <string name="round2_unsupported">Ứng dụng chưa hỗ trợ nội dung này.</string>
+    <string name="round2_update">Cập nhật ứng dụng để tiếp tục</string>
+    <string name="round2_invalid_content">Dữ liệu câu hỏi không hợp lệ. Hãy tải lại.</string>
+    <string name="round2_load_failed">Chưa tải được vòng học. Hãy thử lại.</string>
+    <string name="round2_passed">Đạt · %1$.1f%%</string>
+    <string name="round2_failed">Chưa đạt · %1$.1f%%</string>
+    <string name="round2_streak">Chuỗi học hiện tại: %1$d ngày</string>
+    <string name="round2_round_unlocked">Đã mở vòng tiếp theo</string>
+    <string name="round2_topic_progress">Đã hoàn thành chủ đề</string>
+    <string name="round2_level_progress">Đã hoàn thành cấp độ</string>
+    <string name="round2_submit_invalid">Bài nộp không hợp lệ. Bạn có thể thử lại hoặc về bài học để mở một lượt mới.</string>
+</resources>

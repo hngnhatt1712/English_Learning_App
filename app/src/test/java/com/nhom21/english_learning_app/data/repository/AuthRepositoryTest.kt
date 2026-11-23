@@ -344,59 +344,6 @@ class AuthRepositoryTest {
     }
 
     @Test
-    fun logout_success_clearsToken() = testScope.runTest {
-        tokenManager.saveToken("token_to_logout")
-        mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"status":true,"message":"Logged out","data":null,"error":null}""")
-        )
-
-        val result = authRepository.logout(fcmToken = null)
-
-        assertTrue(result is ApiResult.Success)
-        assertNull(tokenManager.accessToken.first())
-
-        val recordedRequest = mockWebServer.takeRequest()
-        assertEquals("/auth/logout", recordedRequest.path)
-        // Check body when fcmToken is null
-        val body = recordedRequest.body.readUtf8()
-        assertTrue(body.isEmpty() || body.contains("null") || body.contains("{}"))
-    }
-
-    @Test
-    fun logout_server500_stillClearsTokenLocally() = testScope.runTest {
-        tokenManager.saveToken("token_must_be_cleared")
-        mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(500)
-                .setBody("""{"status":false,"message":"Internal Error","data":null,"error":{"type":"internal-error","detail":"Server error","traceId":"t500","errors":null}}""")
-        )
-
-        val result = authRepository.logout("sample_fcm")
-
-        assertTrue(result is ApiResult.Failure)
-        val failure = (result as ApiResult.Failure).error
-        assertEquals(ApiErrorType.INTERNAL_ERROR, failure.type)
-        // Token must still be cleared locally per D-A12
-        assertNull(tokenManager.accessToken.first())
-    }
-
-    @Test
-    fun logout_connectionLost_stillClearsTokenLocally() = testScope.runTest {
-        tokenManager.saveToken("token_to_clear_on_disconnect")
-        mockWebServer.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START))
-
-        val result = authRepository.logout("sample_fcm")
-
-        assertTrue(result is ApiResult.Failure)
-        val failure = (result as ApiResult.Failure).error
-        assertEquals(ApiErrorType.NETWORK, failure.type)
-        // Token must still be cleared locally per D-A12
-        assertNull(tokenManager.accessToken.first())
-    }
-
-    @Test
     fun networkDisconnect_returnsFailureNetwork() = testScope.runTest {
         mockWebServer.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START))
 

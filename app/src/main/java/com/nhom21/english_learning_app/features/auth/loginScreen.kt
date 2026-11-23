@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -85,7 +88,8 @@ fun LoginRoute(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
     onLoginSuccess: (String?) -> Unit = {},
-    onRegisterClick: () -> Unit = {}
+    onRegisterClick: () -> Unit = {},
+    onForgotPasswordClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -105,7 +109,8 @@ fun LoginRoute(
         onPasswordChange = viewModel::onPasswordChange,
         onTogglePasswordVisibility = viewModel::onTogglePasswordVisibility,
         onLoginClick = viewModel::onLoginClick,
-        onRegisterClick = onRegisterClick
+        onRegisterClick = onRegisterClick,
+        onForgotPasswordClick = onForgotPasswordClick
     )
 }
 
@@ -122,7 +127,8 @@ fun LoginScreen(
     onPasswordChange: (String) -> Unit = {},
     onTogglePasswordVisibility: () -> Unit = {},
     onLoginClick: () -> Unit = {},
-    onRegisterClick: () -> Unit = {}
+    onRegisterClick: () -> Unit = {},
+    onForgotPasswordClick: () -> Unit = {}
 ) {
     val isDark = isSystemInDarkTheme()
     val focusManager = LocalFocusManager.current
@@ -313,6 +319,23 @@ fun LoginScreen(
                         onLoginClick()
                     }
                 )
+            )
+
+            Text(
+                text = "Quên mật khẩu?",
+                fontFamily = Quicksand,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (isDark) OwlaColors.PrimaryBase else Color(0xFF036268),
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = "Mở màn hình quên mật khẩu",
+                        onClick = onForgotPasswordClick
+                    )
+                    .wrapContentSize(Alignment.CenterEnd)
             )
 
             // 5. Hiển thị thông báo lỗi (Ẩn khi null - Dùng màu Danger Red - Mục 2.1 & 2.2)

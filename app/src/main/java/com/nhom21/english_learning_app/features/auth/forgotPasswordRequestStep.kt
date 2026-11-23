@@ -87,6 +87,7 @@ fun ForgotPasswordRequestStep(
             value = uiState.emailOrPhone,
             onValueChange = onEmailOrPhoneChange,
             modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading,
             placeholder = {
                 Text(
                     text = "Email hoặc số điện thoại",
@@ -132,6 +133,7 @@ fun ForgotPasswordRequestStep(
                 value = uiState.captchaInput,
                 onValueChange = onCaptchaInputChange,
                 modifier = Modifier.weight(1f),
+                enabled = !uiState.isLoading,
                 placeholder = {
                     Text(
                         text = "Mã xác nhận",
@@ -182,6 +184,7 @@ fun ForgotPasswordRequestStep(
                 onSendCodeClick()
             },
             isLoading = uiState.isLoading,
+            enabled = !uiState.isLoading,
             baseColor = deepTealColor,
             shadowColor = Color(0xFF02474B)
         )

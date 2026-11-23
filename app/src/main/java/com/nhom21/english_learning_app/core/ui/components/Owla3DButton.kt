@@ -7,10 +7,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,7 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,7 +47,14 @@ fun Owla3DButton(
     enabled: Boolean = true,
     height: Dp = 50.dp,
     pressDepth: Dp = 4.dp,
-    shape: Shape = RoundedCornerShape(20.dp)
+    shape: Shape = RoundedCornerShape(20.dp),
+    labelStyle: TextStyle = TextStyle(
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold,
+        fontFamily = Baloo2,
+        letterSpacing = 0.5.sp
+    ),
+    leadingIcon: (@Composable () -> Unit)? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -85,6 +98,7 @@ fun Owla3DButton(
                     interactionSource = interactionSource,
                     indication = null, // Tắt ripple phẳng kiểu Material để giữ trọn vẹn cảm giác khối 3D
                     enabled = enabled && !isLoading,
+                    role = Role.Button,
                     onClick = onClick
                 ),
             contentAlignment = Alignment.Center
@@ -96,14 +110,14 @@ fun Owla3DButton(
                     strokeWidth = 3.dp
                 )
             } else {
-                Text(
-                    text = text,
-                    color = textColor,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = Baloo2,
-                    letterSpacing = 0.5.sp
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    leadingIcon?.invoke()
+                    Text(text, color = textColor, style = labelStyle, textAlign = TextAlign.Center)
+                }
             }
         }
     }

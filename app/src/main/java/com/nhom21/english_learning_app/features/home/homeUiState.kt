@@ -1,14 +1,11 @@
 package com.nhom21.english_learning_app.features.home
 
+import com.nhom21.english_learning_app.core.navigation.MainTab
+
 /**
  * Các tab thuộc thanh điều hướng Bottom Navigation Bar.
  */
-enum class HomeTab {
-    HOME,
-    LESSON,
-    PRACTICE,
-    PROFILE
-}
+typealias HomeTab = MainTab
 
 /**
  * UI State cho màn hình Home (HomeScreen) của ứng dụng Owla English.

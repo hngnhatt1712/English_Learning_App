@@ -20,7 +20,7 @@ class LevelRepository:
 
         Trả về Sequence rỗng nếu chưa có dữ liệu (không raise).
         """
-        stmt = select(Level).order_by(Level.order_index.asc())
+        stmt = select(Level).order_by(Level.order_index.asc(), Level.id.asc())
         return self.db.scalars(stmt).all()
 
     def get_by_id(self, level_id: uuid.UUID) -> Optional[Level]:

@@ -83,6 +83,7 @@ fun ForgotPasswordVerifyOtpStep(
             value = uiState.otpInput,
             onValueChange = onOtpInputChange,
             modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading,
             placeholder = {
                 Text(
                     text = "Mã OTP (ví dụ: 123456)",
@@ -138,11 +139,19 @@ fun ForgotPasswordVerifyOtpStep(
                     fontWeight = FontWeight.Bold,
                     fontFamily = Quicksand,
                     color = OwlaColors.AccentBase,
-                    modifier = Modifier.clickable(onClick = onResendOtpClick)
+                    modifier = Modifier.clickable(
+                        enabled = !uiState.isLoading,
+                        onClick = onResendOtpClick
+                    )
                 )
             } else {
+                val cooldownSeconds = if (uiState.resendCooldownSeconds > 0) {
+                    uiState.resendCooldownSeconds
+                } else {
+                    uiState.resendTimerSeconds
+                }
                 Text(
-                    text = "Gửi lại sau ${uiState.resendTimerSeconds}s",
+                    text = "Gửi lại sau ${cooldownSeconds}s",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = Quicksand,
@@ -161,6 +170,7 @@ fun ForgotPasswordVerifyOtpStep(
                 onVerifyOtpClick()
             },
             isLoading = uiState.isLoading,
+            enabled = !uiState.isLoading,
             baseColor = deepTealColor,
             shadowColor = Color(0xFF02474B)
         )

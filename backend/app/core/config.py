@@ -1,5 +1,9 @@
 from pathlib import Path
+
+from pydantic import ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from app.utils.media import validate_media_base
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  #Trỏ về thư mục backend
 
@@ -7,6 +11,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent  #Trỏ về thư mục
 class Settings(BaseSettings):
   APP_NAME: str = "Owla English API"
   API_V1_PREFIX: str = "/api/v1"
+  ENV: str = "production"
+  MEDIA_BASE_URL: str = "http://192.168.1.9:8000/static/"
+
+  @field_validator("MEDIA_BASE_URL")
+  @classmethod
+  def media_base(cls, value: str, info: ValidationInfo) -> str:
+    return validate_media_base(value, environment=info.data.get("ENV", "production"))
 
   DATABASE_URL: str
 
@@ -16,6 +27,20 @@ class Settings(BaseSettings):
 
   FCM_CREDENTIALS_PATH: str = ""
 
+  PASSWORD_RESET_PEPPER: str = ""
+  OTP_TTL_SECONDS: int = 600
+  OTP_MAX_ATTEMPTS: int = 5
+  OTP_RESEND_COOLDOWN_SECONDS: int = 60
+  OTP_MAX_REQUESTS_PER_HOUR: int = 5
+  RESET_TOKEN_TTL_SECONDS: int = 600
+  EMAIL_BACKEND: str = "console"
+  SMTP_HOST: str = ""
+  SMTP_PORT: int | None = None
+  SMTP_USERNAME: str = ""
+  SMTP_PASSWORD: str = ""
+  SMTP_FROM: str = ""
+  SMTP_USE_TLS: bool = True
+
   model_config = SettingsConfigDict(
       env_file=str(BASE_DIR / ".env"),  # Trỏ file .env
       env_file_encoding="utf-8",
@@ -23,4 +48,4 @@ class Settings(BaseSettings):
   )
 
 
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]

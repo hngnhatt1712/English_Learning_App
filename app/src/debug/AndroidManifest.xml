@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <application android:networkSecurityConfig="@xml/network_security_config" />
+    <application android:networkSecurityConfig="@xml/network_security_config">
+        <activity
+            android:name=".features.round.Round1DemoActivity"
+            android:exported="true"
+            android:label="@string/round_demo_app_name"
+            android:taskAffinity="${applicationId}.rounddemo" />
+        <activity
+            android:name=".features.round.Round2DemoActivity"
+            android:exported="true"
+            android:label="@string/round2_demo_app_name"
+            android:taskAffinity="${applicationId}.round2demo" />
+    </application>
 
 </manifest>

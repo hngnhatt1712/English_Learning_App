@@ -134,4 +134,41 @@ class ApiErrorParserTest {
         assertEquals(ApiErrorType.UNKNOWN, failure.type)
         assertEquals(500, failure.httpStatus)
     }
+
+    @Test
+    fun parse_invalidOtpAndInvalidResetToken_mapsToDedicatedErrorTypes() {
+        val invalidOtpBody = """
+            {
+              "status": false,
+              "message": "Bad Request",
+              "data": null,
+              "error": {
+                "type": "invalid_otp",
+                "detail": "Invalid or expired OTP.",
+                "traceId": "trace-otp",
+                "errors": null
+              }
+            }
+        """.trimIndent()
+        val otpFailure = parser.parse(invalidOtpBody, 400)
+        assertEquals(ApiErrorType.INVALID_OTP, otpFailure.type)
+        assertEquals(400, otpFailure.httpStatus)
+
+        val invalidResetTokenBody = """
+            {
+              "status": false,
+              "message": "Bad Request",
+              "data": null,
+              "error": {
+                "type": "invalid_reset_token",
+                "detail": "Invalid or expired reset token.",
+                "traceId": "trace-rt",
+                "errors": null
+              }
+            }
+        """.trimIndent()
+        val rtFailure = parser.parse(invalidResetTokenBody, 400)
+        assertEquals(ApiErrorType.INVALID_RESET_TOKEN, rtFailure.type)
+        assertEquals(400, rtFailure.httpStatus)
+    }
 }

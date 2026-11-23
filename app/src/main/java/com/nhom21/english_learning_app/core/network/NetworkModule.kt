@@ -5,11 +5,18 @@ import com.nhom21.english_learning_app.data.remote.api.AuthApi
 import com.nhom21.english_learning_app.data.remote.api.HomeApi
 import com.nhom21.english_learning_app.data.remote.api.LevelApi
 import com.nhom21.english_learning_app.data.remote.api.ProfileApi
+import com.nhom21.english_learning_app.data.remote.api.QuestionApi
+import com.nhom21.english_learning_app.data.remote.api.RoundApi
+import com.nhom21.english_learning_app.data.remote.api.TopicApi
+import com.nhom21.english_learning_app.data.remote.api.VocabularyApi
+import com.nhom21.english_learning_app.data.remote.dto.QuestionDto
+import com.nhom21.english_learning_app.data.remote.dto.unknownQuestionDeserializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -34,6 +41,11 @@ object NetworkModule {
         encodeDefaults = false
         coerceInputValues = true
         classDiscriminator = "type"
+        serializersModule = SerializersModule {
+            polymorphicDefaultDeserializer(QuestionDto::class) { type ->
+                type?.let(::unknownQuestionDeserializer)
+            }
+        }
     }
 
     @Provides
@@ -101,4 +113,22 @@ object NetworkModule {
     fun provideProfileApi(retrofit: Retrofit): ProfileApi {
         return retrofit.create(ProfileApi::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideTopicApi(retrofit: Retrofit): TopicApi {
+        return retrofit.create(TopicApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRoundApi(retrofit: Retrofit): RoundApi = retrofit.create(RoundApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideVocabularyApi(retrofit: Retrofit): VocabularyApi = retrofit.create(VocabularyApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideQuestionApi(retrofit: Retrofit): QuestionApi = retrofit.create(QuestionApi::class.java)
 }

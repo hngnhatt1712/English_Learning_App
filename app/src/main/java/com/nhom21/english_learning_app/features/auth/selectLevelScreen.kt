@@ -5,7 +5,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,18 +18,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material3.Icon
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,12 +45,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.core.ui.components.Owla3DButton
+import com.nhom21.english_learning_app.domain.model.Level
 import com.nhom21.english_learning_app.ui.theme.Baloo2
 import com.nhom21.english_learning_app.ui.theme.OwlaColors
 import com.nhom21.english_learning_app.ui.theme.Quicksand
@@ -50,14 +68,15 @@ import com.nhom21.english_learning_app.ui.theme.Quicksand
 /**
  * Màn hình Chọn trình độ tiếng Anh (SelectLevelScreen) của ứng dụng Owla English.
  * Mascot Owla cùng bong bóng thoại "How much English do you know?",
- * danh sách các mức độ A1, A2, B1 và nút 3D Continue bên dưới.
+ * danh sách trình độ từ backend và nút 3D Continue bên dưới.
  */
 @Composable
 fun SelectLevelScreen(
     modifier: Modifier = Modifier,
     uiState: SelectLevelUiState = SelectLevelUiState(),
     onLevelSelect: (String) -> Unit = {},
-    onContinueClick: (String) -> Unit = {}
+    onContinueClick: () -> Unit = {},
+    onRetry: () -> Unit = {}
 ) {
     val isDark = isSystemInDarkTheme()
 
@@ -99,13 +118,32 @@ fun SelectLevelScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // 2. Danh sách lựa chọn Level (A1, A2, B1)
+            // The existing cards scroll only when server content exceeds the available space.
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .selectableGroup(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                uiState.levels.forEach { option ->
-                    val isSelected = uiState.selectedLevel == option.code
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        color = OwlaColors.PrimaryBase,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Text("Đang tải trình độ…", fontFamily = Quicksand, color = textPrimary)
+                } else if (uiState.levels.isEmpty()) {
+                    Text(
+                        text = uiState.errorMessage ?: "Chưa có trình độ nào. Vui lòng thử lại.",
+                        fontFamily = Quicksand,
+                        color = textPrimary,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                    )
+                    Owla3DButton(text = "Thử lại", onClick = onRetry)
+                } else uiState.levels.forEach { option ->
+                    val presentation = levelCardPresentation(option)
+                    val isSelected = uiState.selectedLevelId == option.id
 
                     val cardBorder = if (isSelected) {
                         BorderStroke(2.dp, OwlaColors.PrimaryBase)
@@ -116,14 +154,22 @@ fun SelectLevelScreen(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onLevelSelect(option.code) },
+                            .selectable(
+                                selected = isSelected,
+                                enabled = !uiState.isSubmitting && !uiState.isSelectionSaved,
+                                role = Role.RadioButton,
+                                onClick = { onLevelSelect(option.id) }
+                            ),
                         shape = RoundedCornerShape(20.dp),
                         color = surfaceColor,
                         border = cardBorder,
                         shadowElevation = if (isSelected) 2.dp else 0.dp
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 80.dp)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
@@ -131,6 +177,7 @@ fun SelectLevelScreen(
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
+                                    .widthIn(max = 104.dp)
                                     .background(
                                         color = OwlaColors.PrimaryBase.copy(alpha = 0.12f),
                                         shape = CircleShape
@@ -145,11 +192,13 @@ fun SelectLevelScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = option.code,
+                                    text = presentation.label,
                                     fontFamily = Baloo2,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
-                                    color = if (isDark) OwlaColors.DarkTextPrimary else Color(0xFF134E45)
+                                    color = if (isDark) OwlaColors.DarkTextPrimary else Color(0xFF134E45),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
@@ -163,12 +212,14 @@ fun SelectLevelScreen(
 
                             // Mô tả trình độ
                             Text(
-                                text = option.description,
+                                text = presentation.description,
                                 fontFamily = Quicksand,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 15.sp,
                                 color = textPrimary,
                                 lineHeight = 20.sp,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -176,14 +227,23 @@ fun SelectLevelScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            if (!uiState.isLoading && uiState.levels.isNotEmpty() && uiState.errorMessage != null) {
+                Text(
+                    text = uiState.errorMessage,
+                    fontFamily = Quicksand,
+                    color = textPrimary,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                )
+                Owla3DButton(text = "Thử lại", onClick = onRetry)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             // 3. Nút 3D Continue
             Owla3DButton(
                 text = "Continue",
-                onClick = { onContinueClick(uiState.selectedLevel) },
-                isLoading = uiState.isLoading,
-                enabled = uiState.selectedLevel.isNotEmpty(),
+                onClick = onContinueClick,
+                isLoading = uiState.isSubmitting,
+                enabled = uiState.canContinue,
                 baseColor = OwlaColors.PrimaryBase,
                 shadowColor = OwlaColors.PrimaryShadow
             )
@@ -191,6 +251,32 @@ fun SelectLevelScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
+
+private data class LevelCardPresentation(val label: String, val description: String)
+
+private val knownCefrCode = Regex(
+    """(?<![\p{L}\p{N}])(A1|A2|B1)(?![\p{L}\p{N}])""",
+    RegexOption.IGNORE_CASE
+)
+
+/** Adapts display copy only; selection and submission keep the original level UUID. */
+private fun levelCardPresentation(level: Level): LevelCardPresentation {
+    val code = knownCefrCode.findAll(level.name)
+        .map { it.value.uppercase() }
+        .distinct()
+        .singleOrNull()
+    val description = when (code) {
+        "A1" -> "I just started learning English"
+        "A2" -> "I know some words and phrases"
+        "B1" -> "I can have a simple conversation"
+        else -> level.description.orEmpty().replace(Regex("""\s+"""), " ").trim()
+            .ifBlank { "Choose this level" }
+    }
+    return LevelCardPresentation(
+        label = code ?: level.name.trim().ifBlank { "Level" },
+        description = description
+    )
 }
 
 /**
@@ -251,11 +337,11 @@ private fun OwlaSpeechBubble(
 @Preview(name = "1. Select Level Screen (Light)", showBackground = true)
 @Composable
 fun SelectLevelScreenPreview() {
-    var state by remember { mutableStateOf(SelectLevelUiState(selectedLevel = "A2")) }
+    var state by remember { mutableStateOf(previewSelectLevelState()) }
 
     SelectLevelScreen(
         uiState = state,
-        onLevelSelect = { state = state.copy(selectedLevel = it) }
+        onLevelSelect = { state = state.copy(selectedLevelId = it) }
     )
 }
 
@@ -266,11 +352,11 @@ fun SelectLevelScreenPreview() {
 )
 @Composable
 fun SelectLevelScreenDarkModePreview() {
-    var state by remember { mutableStateOf(SelectLevelUiState(selectedLevel = "A1")) }
+    var state by remember { mutableStateOf(previewSelectLevelState()) }
 
     SelectLevelScreen(
         uiState = state,
-        onLevelSelect = { state = state.copy(selectedLevel = it) }
+        onLevelSelect = { state = state.copy(selectedLevelId = it) }
     )
 }
 
@@ -283,10 +369,35 @@ fun SelectLevelRoute(
     viewModel: SelectLevelViewModel = hiltViewModel(),
     onNavigateNext: (String) -> Unit = {}
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val navigateNext by rememberUpdatedState(onNavigateNext)
+
+    LaunchedEffect(viewModel, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.events.collect { event ->
+                when (event) {
+                    is SelectLevelEvent.SelectionSaved -> navigateNext(event.levelId)
+                }
+            }
+        }
+    }
+
     SelectLevelScreen(
         modifier = modifier,
-        uiState = viewModel.uiState,
+        uiState = uiState,
         onLevelSelect = viewModel::onLevelSelect,
-        onContinueClick = onNavigateNext
+        onContinueClick = viewModel::onContinueClick,
+        onRetry = viewModel::onRetry
     )
+}
+
+/** Design-only fixtures; the route always uses the API-backed ViewModel state. */
+private fun previewSelectLevelState(): SelectLevelUiState {
+    val levels = listOf(
+        Level("preview-a1", "A1", "I just started learning English", 1),
+        Level("preview-a2", "A2", "I know some words and phrases", 2),
+        Level("preview-b1", "B1", "I can have a simple conversation", 3)
+    )
+    return SelectLevelUiState(levels = levels, selectedLevelId = "preview-a2")
 }

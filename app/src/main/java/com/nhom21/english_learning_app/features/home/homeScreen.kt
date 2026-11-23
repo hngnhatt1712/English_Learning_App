@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +30,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -44,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.nhom21.english_learning_app.R
 import com.nhom21.english_learning_app.core.ui.components.Owla3DButton
+import com.nhom21.english_learning_app.core.ui.components.OwlaHeaderLogo
 import com.nhom21.english_learning_app.ui.theme.Baloo2
 import com.nhom21.english_learning_app.ui.theme.OwlaColors
 import com.nhom21.english_learning_app.ui.theme.Quicksand
@@ -55,7 +53,6 @@ import com.nhom21.english_learning_app.ui.theme.Quicksand
 fun HomeScreen(
     modifier: Modifier = Modifier,
     uiState: HomeUiState = HomeUiState(),
-    onTabSelected: (HomeTab) -> Unit = {},
     onContinueClick: () -> Unit = {},
     onReviewClick: () -> Unit = {},
     onFlashcardClick: () -> Unit = {},
@@ -69,22 +66,13 @@ fun HomeScreen(
     val textSecondary = if (isDark) OwlaColors.DarkTextSecondary else OwlaColors.LightTextSecondary
     val borderColor = if (isDark) OwlaColors.DarkBorder else OwlaColors.LightBorder
 
-    Scaffold(
+    Surface(
         modifier = modifier.fillMaxSize(),
-        containerColor = backgroundColor,
-        bottomBar = {
-            OwlaBottomBar(
-                selectedTab = uiState.selectedTab,
-                hasPracticeNotification = uiState.hasPracticeNotification,
-                onTabSelected = onTabSelected,
-                isDark = isDark
-            )
-        }
-    ) { innerPadding ->
+        color = backgroundColor
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -161,9 +149,8 @@ private fun HomeHeader(
                     .background(Color(0xFFE8F6F4)),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_owla),
-                    contentDescription = "User Avatar Owla",
+                OwlaHeaderLogo(
+                    contentDescription = null,
                     modifier = Modifier.size(44.dp)
                 )
             }
@@ -518,122 +505,6 @@ private fun ReviewTodayCard(
     }
 }
 
-/**
- * Component Bottom Navigation Bar với 4 tab (Home, Lesson, Practice, Profile).
- */
-@Composable
-private fun OwlaBottomBar(
-    selectedTab: HomeTab,
-    hasPracticeNotification: Boolean,
-    onTabSelected: (HomeTab) -> Unit,
-    isDark: Boolean
-) {
-    val barBackground = if (isDark) OwlaColors.DarkSurface else Color.White
-    val border = if (isDark) OwlaColors.DarkBorder else OwlaColors.LightBorder
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = barBackground,
-        border = BorderStroke(1.dp, border),
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BottomNavItem(
-                modifier = Modifier.weight(1f),
-                iconRes = R.drawable.ic_home,
-                label = "Home",
-                isSelected = selectedTab == HomeTab.HOME,
-                onClick = { onTabSelected(HomeTab.HOME) }
-            )
-
-            BottomNavItem(
-                modifier = Modifier.weight(1f),
-                iconRes = R.drawable.ic_lesson,
-                label = "Lesson",
-                isSelected = selectedTab == HomeTab.LESSON,
-                onClick = { onTabSelected(HomeTab.LESSON) }
-            )
-
-            BottomNavItem(
-                modifier = Modifier.weight(1f),
-                iconRes = R.drawable.ic_practice,
-                label = "Practice",
-                isSelected = selectedTab == HomeTab.PRACTICE,
-                hasBadge = hasPracticeNotification,
-                onClick = { onTabSelected(HomeTab.PRACTICE) }
-            )
-
-            BottomNavItem(
-                modifier = Modifier.weight(1f),
-                iconRes = R.drawable.ic_profile,
-                label = "Profile",
-                isSelected = selectedTab == HomeTab.PROFILE,
-                onClick = { onTabSelected(HomeTab.PROFILE) }
-            )
-        }
-    }
-}
-
-/**
- * Chi tiết từng Item trên thanh Bottom Navigation Bar.
- */
-@Composable
-private fun BottomNavItem(
-    iconRes: Int,
-    label: String,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    hasBadge: Boolean = false,
-    onClick: () -> Unit
-) {
-    val activeColor = OwlaColors.PrimaryBase
-    val inactiveColor = Color(0xFF7B8B9A)
-
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-            .padding(vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Box {
-            Icon(
-                painter = painterResource(id = iconRes),
-                contentDescription = label,
-                tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(26.dp)
-                    .alpha(if (isSelected) 1f else 0.55f)
-            )
-
-            if (hasBadge) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(OwlaColors.DangerBase)
-                        .align(Alignment.TopEnd)
-                )
-            }
-        }
-
-        Text(
-            text = label,
-            fontFamily = Baloo2,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            fontSize = 13.sp,
-            color = if (isSelected) activeColor else inactiveColor
-        )
-    }
-}
-
 // ---------------------------------------------------------------------------
 // PREVIEWS
 // ---------------------------------------------------------------------------
@@ -670,15 +541,6 @@ fun HomeRoute(
     HomeScreen(
         modifier = modifier,
         uiState = uiState,
-        onTabSelected = { tab ->
-            viewModel.onTabSelected(tab)
-            when (tab) {
-                HomeTab.LESSON -> onNavigateToLesson()
-                HomeTab.PRACTICE -> onNavigateToPractice()
-                HomeTab.PROFILE -> onNavigateToProfile()
-                HomeTab.HOME -> {}
-            }
-        },
         onContinueClick = onNavigateToLesson,
         onReviewClick = onNavigateToPractice,
         onFlashcardClick = onNavigateToPractice,
