@@ -56,7 +56,6 @@ from app.schemas.round import (
     VocabularyActionRequest,
     VocabularyActionResultDto,
 )
-from app.schemas.streak import StreakDto
 from app.services.level_progress_provider import get_user_level_progress
 from app.services.round_content import (
     content_error,
@@ -65,7 +64,7 @@ from app.services.round_content import (
     stored_payload,
     vocabulary_dto,
 )
-from app.services.streak_service import effective_streak, today_vn, touch
+from app.services.streak_service import touch
 from app.services.topic_service import get_topic_states_for_level
 from app.utils.answer_text import normalize_answer_text
 
@@ -336,21 +335,6 @@ class RoundService:
             raise invalid("roundId", "Round submission is not available for this type")
         total = sum(scoring_units(payload) for payload in payloads.values())
         percent, passed, stars = score(correct, total)
-        if current.activity.round_type == "matching":
-            # Round 3 grading currently reports the saved progress without recording this attempt.
-            today = today_vn()
-            return RoundResultDto(
-                round_id=round_id, total_questions=total, correct_count=correct,
-                score_percent=percent, passed=passed, stars=stars, results=results,
-                best_stars=current.metadata.stars, best_score_percent=current.metadata.best_score_percent,
-                attempts=current.metadata.attempts, is_new_best=False,
-                unlocks=UnlocksDto(next_round_id=None, topic_completed=False, next_topic_id=None,
-                                   level_completed=False, next_level_id=None),
-                streak=StreakDto(
-                    current=effective_streak(user.current_streak, user.last_learning_date, today),
-                    last_learning_date=user.last_learning_date, learned_today=user.last_learning_date == today,
-                ),
-            )
         return self._record_result(user, current.activity, total, correct, percent, passed, stars, results)
 
     def _record_result(

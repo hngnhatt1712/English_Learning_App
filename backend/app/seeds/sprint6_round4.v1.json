@@ -1,0 +1,119 @@
+{
+  "1.1": {
+    "fill": [
+      ["My ___ is Anna.", ["name"], ["name", "age", "home"]],
+      ["The ___ is only six months old.", ["baby"], null],
+      ["My father's son is my ___.", ["brother"], ["brother", "mother", "sister"]]
+    ],
+    "translate": [
+      ["Đây là mẹ của tôi.", "This is my mother.", ["This is my mother."]],
+      ["Bố tôi đang ở nhà.", "My father is at home.", ["My father is at home."]],
+      ["Tôi có một người chị gái.", "I have an older sister.", ["I have an older sister."]]
+    ],
+    "order": ["My family lives near the park.", "This is my best friend."]
+  },
+  "1.2": {
+    "fill": [
+      ["I ___ up at seven every morning.", ["wake"], ["wake", "read", "draw"]],
+      ["We ___ dinner in the kitchen.", ["cook", "make", "prepare"], null],
+      ["I like to listen to ___ on my headphones.", ["music"], ["music", "sleep", "homework"]]
+    ],
+    "translate": [
+      ["Tôi đọc sách mỗi tối.", "I read books every evening.", ["I read books every evening."]],
+      ["Họ chơi bóng đá sau giờ học.", "They play football after school.", ["They play football after school.", "They play soccer after school."]],
+      ["Chúng tôi nhảy cùng nhau vào các ngày thứ Sáu.", "We dance together on Fridays.", ["We dance together on Fridays."]]
+    ],
+    "order": ["I draw pictures after lunch.", "They run in the park."]
+  },
+  "1.3": {
+    "fill": [
+      ["Please pour some ___ into my glass.", ["water", "milk"], ["water", "milk", "money"]],
+      ["I wear these ___ on my feet.", ["shoes"], null],
+      ["Apples and bananas are types of ___.", ["fruit"], ["fruit", "coffee", "chicken"]]
+    ],
+    "translate": [
+      ["Tôi muốn mua một chiếc áo sơ mi.", "I want to buy a shirt.", ["I want to buy a shirt."]],
+      ["Cô ấy uống cà phê vào buổi sáng.", "She drinks coffee in the morning.", ["She drinks coffee in the morning."]],
+      ["Chiếc mũ này giá bao nhiêu?", "How much is this hat?", ["How much is this hat?", "How much does this hat cost?"]]
+    ],
+    "order": ["We need milk and eggs.", "I have enough money for lunch."]
+  },
+  "2.1": {
+    "fill": [
+      ["You need a ___ to board the train.", ["ticket"], ["ticket", "map", "hotel"]],
+      ["The ___ at our hotel helps tourists find their way around the city.", ["guide"], null],
+      ["Please show your ___ at the border.", ["passport"], ["passport", "luggage", "map"]]
+    ],
+    "translate": [
+      ["Nhà ga ở đâu?", "Where is the station?", ["Where is the station?"]],
+      ["Chúng tôi đã đi tàu điện ngầm đến khách sạn.", "We took the subway to the hotel.", ["We took the subway to the hotel."]],
+      ["Tôi đã để hành lý ở sân bay.", "I left my luggage at the airport.", ["I left my luggage at the airport."]]
+    ],
+    "order": ["The tourist asked for a map.", "Our hotel is opposite the station."]
+  },
+  "2.2": {
+    "fill": [
+      ["We borrowed three books from the ___.", ["library"], ["library", "meeting", "project"]],
+      ["I typed the report on my ___.", ["laptop", "computer"], null],
+      ["Our manager scheduled a ___ to discuss the project.", ["meeting"], ["meeting", "library", "laptop"]]
+    ],
+    "translate": [
+      ["Tôi đã tốt nghiệp năm ngoái.", "I graduated last year.", ["I graduated last year."]],
+      ["Hôm qua tôi bận ở văn phòng.", "I was busy at the office yesterday.", ["I was busy at the office yesterday.", "Yesterday I was busy at the office."]],
+      ["Đồng nghiệp của tôi đã hoàn thành dự án.", "My colleague finished the project.", ["My colleague finished the project.", "My colleague completed the project."]]
+    ],
+    "order": ["We studied for the exam together.", "The manager arrived early for the meeting."]
+  },
+  "2.3": {
+    "fill": [
+      ["Your head hurts because you have a ___.", ["headache"], ["headache", "habit", "cough"]],
+      ["The doctor gave me some ___ for my cough.", ["medicine"], null],
+      ["A short walk can help you ___ after work.", ["relax"], ["relax", "cough", "stress"]]
+    ],
+    "translate": [
+      ["Tôi tập thể dục ba lần một tuần.", "I exercise three times a week.", ["I exercise three times a week."]],
+      ["Tối qua tôi thấy buồn ngủ.", "I felt sleepy last night.", ["I felt sleepy last night."]],
+      ["Căng thẳng có thể ảnh hưởng đến giấc ngủ.", "Stress can affect your sleep.", ["Stress can affect your sleep."]]
+    ],
+    "order": ["Eating vegetables is a healthy habit.", "She went to the hospital yesterday."]
+  },
+  "3.1": {
+    "fill": [
+      ["The ___ applauded after the final song.", ["audience"], ["audience", "instrument", "tradition"]],
+      ["The musician tuned her ___ before going on stage.", ["instrument", "guitar", "violin"], null],
+      ["The museum is hosting an ___ of local art.", ["exhibition"], ["exhibition", "audience", "instrument"]]
+    ],
+    "translate": [
+      ["Lễ hội này thu hút nhiều du khách.", "This festival attracts many visitors.", ["This festival attracts many visitors."]],
+      ["Trang phục biểu diễn của cô ấy được làm bằng lụa.", "Her costume was made of silk.", ["Her costume was made of silk."]],
+      ["Truyền thống này vẫn còn phổ biến.", "This tradition is still popular.", ["This tradition is still popular."]]
+    ],
+    "order": ["We booked tickets for the concert.", "The cinema shows films from around the world."]
+  },
+  "3.2": {
+    "fill": [
+      ["The company stores customer records in a ___.", ["database"], ["database", "satellite", "resume"]],
+      ["Please attach your ___ when you apply for the job.", ["resume", "CV", "résumé"], null],
+      ["An ___ is a set of steps a program can follow.", ["algorithm"], ["algorithm", "engineer", "smartphone"]]
+    ],
+    "translate": [
+      ["Các kỹ sư phát triển phần mềm mới.", "Engineers develop new software.", ["Engineers develop new software."]],
+      ["Vệ tinh gửi hình ảnh về Trái Đất.", "The satellite sends images to Earth.", ["The satellite sends images to Earth.", "The satellite sends pictures to Earth."]],
+      ["Họ cần một giải pháp mang tính đổi mới.", "They need an innovative solution.", ["They need an innovative solution."]]
+    ],
+    "order": ["Artificial intelligence can help analyze data.", "My smartphone can run this software."]
+  },
+  "3.3": {
+    "fill": [
+      ["Air ___ can make breathing difficult.", ["pollution"], ["pollution", "charity", "wildlife"]],
+      ["This national park protects local ___.", ["wildlife", "animals"], null],
+      ["The ___ helps families after earthquakes.", ["charity"], ["charity", "climate", "plastic"]]
+    ],
+    "translate": [
+      ["Việc tái chế giúp giảm rác thải nhựa.", "Recycling helps reduce plastic waste.", ["Recycling helps reduce plastic waste."]],
+      ["Các tình nguyện viên đã trồng cây trong rừng.", "Volunteers planted trees in the forest.", ["Volunteers planted trees in the forest."]],
+      ["Biến đổi khí hậu ảnh hưởng đến toàn xã hội.", "Climate change affects all of society.", ["Climate change affects all of society.", "Climate change affects the whole of society."]]
+    ],
+    "order": ["The earthquake damaged several buildings downtown.", "Many species depend on healthy forests."]
+  }
+}
