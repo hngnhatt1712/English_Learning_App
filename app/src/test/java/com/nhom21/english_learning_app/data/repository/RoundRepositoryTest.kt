@@ -12,6 +12,8 @@ import com.nhom21.english_learning_app.core.network.TokenManager
 import com.nhom21.english_learning_app.data.remote.api.RoundApi
 import com.nhom21.english_learning_app.data.remote.dto.SubmitRoundRequest
 import com.nhom21.english_learning_app.domain.model.Answer
+import com.nhom21.english_learning_app.domain.model.MatchingPair
+import com.nhom21.english_learning_app.domain.model.MatchingPairResult
 import com.nhom21.english_learning_app.domain.model.QuestionContent
 import com.nhom21.english_learning_app.domain.model.RoundAnswer
 import com.nhom21.english_learning_app.domain.model.VocabularyAction
@@ -141,6 +143,52 @@ class RoundRepositoryTest {
         assertEquals(Answer.MultipleChoice("o2"), data.correctAnswer)
         assertEquals("Backend feedback", data.explanation)
         assertPost("/api/v1/questions/$QUESTION_ID/check", """{"answer":{"type":"multiple_choice","optionId":"o1"}}""", 1)
+    }
+
+    @Test
+    fun matchingCheckAndSubmitUseDifferentShapesAndMapNullableFeedback() = runTest {
+        val board = """{"id":"$QUESTION_ID","order":1,"prompt":"Match","type":"matching",
+            "imageUrl":null,"audioUrl":null,
+            "left":[{"id":"l1","text":"Cat","imageUrl":null},{"id":"l2","text":"Dog","imageUrl":null}],
+            "right":[{"id":"r2","text":"Dog meaning","imageUrl":null},{"id":"r1","text":null,"imageUrl":"$IMAGE"}]}"""
+        enqueue(roundDetail(board, 2, number = 3, type = "matching"))
+        val detail = repository.getRound(ROUND_ID).success()
+        assertEquals(2, detail.round.totalQuestions)
+        with(detail.questions.single().content as QuestionContent.Matching) {
+            assertEquals(listOf("l1", "l2"), left.map { it.id })
+            assertEquals(listOf("r2", "r1"), right.map { it.id })
+            assertEquals(IMAGE, right.last().imageUrl)
+        }
+        assertEquals("/api/v1/rounds/$ROUND_ID", requireNotNull(server.takeRequest(2, TimeUnit.SECONDS)).path)
+
+        val feedback = """"questionId":"$QUESTION_ID","isCorrect":false,"correctAnswer":null,"explanation":null"""
+        enqueue("{$feedback}")
+        val wrong = MatchingPair("l1", "r2")
+        val fixed = MatchingPair("l1", "r1")
+        val checked = repository.checkAnswer(QUESTION_ID, Answer.MatchingCheck(wrong)).success()
+        assertFalse(checked.isCorrect)
+        assertNull(checked.correctAnswer)
+        assertNull(checked.explanation)
+        assertNull(checked.pairResults)
+        assertPost(
+            "/api/v1/questions/$QUESTION_ID/check",
+            """{"answer":{"type":"matching","leftId":"l1","rightId":"r2"}}""", 1,
+        )
+
+        val result = """{$feedback,"pairResults":[{"leftId":"l1","isCorrect":false},{"leftId":"l2","isCorrect":true}]}"""
+        enqueue(roundResult(score = 50.0, bestScore = 80.0, stars = 0, bestStars = 2, results = result))
+        val paired = repository.submitRound(ROUND_ID, listOf(RoundAnswer(
+            QUESTION_ID, Answer.Matching(listOf(fixed, MatchingPair("l2", "r2")), listOf(wrong, fixed)),
+        ))).success().results.single()
+        assertNull(paired.correctAnswer)
+        assertNull(paired.explanation)
+        assertEquals(listOf(MatchingPairResult("l1", false), MatchingPairResult("l2", true)), paired.pairResults)
+        assertPost(
+            "/api/v1/rounds/$ROUND_ID/submit",
+            """{"answers":[{"questionId":"$QUESTION_ID","answer":{"type":"matching",
+                "pairs":[{"leftId":"l1","rightId":"r1"},{"leftId":"l2","rightId":"r2"}],
+                "attempts":[{"leftId":"l1","rightId":"r2"},{"leftId":"l1","rightId":"r1"}]}}]}""", 1,
+        )
     }
 
     @Test
@@ -276,8 +324,8 @@ class RoundRepositoryTest {
         is ApiResult.Failure -> error("Expected success, got $error")
     }
 
-    private fun roundDetail(questions: String, total: Int) =
-        """{"id":"$ROUND_ID","lessonId":"lesson","roundNumber":2,"type":"recognition","title":"Recognition","status":"unlocked","stars":0,"bestScorePercent":null,"attempts":0,"totalQuestions":$total,"questions":[$questions]}"""
+    private fun roundDetail(questions: String, total: Int, number: Int = 2, type: String = "recognition") =
+        """{"id":"$ROUND_ID","lessonId":"lesson","roundNumber":$number,"type":"$type","title":"Round","status":"unlocked","stars":0,"bestScorePercent":null,"attempts":0,"totalQuestions":$total,"questions":[$questions]}"""
 
     private fun roundResult(score: Double, bestScore: Double?, stars: Int, bestStars: Int, results: String) =
         """{"roundId":"$ROUND_ID","totalQuestions":3,"correctCount":2,"scorePercent":$score,

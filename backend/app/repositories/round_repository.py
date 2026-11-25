@@ -2,7 +2,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.activity import Activity
@@ -41,11 +41,19 @@ class RoundRepository:
             .order_by(Activity.round_number, Activity.id)
         ))
 
-    def question_counts(self, round_ids: Sequence[UUID]) -> dict[UUID, int]:
+    def scoring_unit_counts(self, round_ids: Sequence[UUID]) -> dict[UUID, int | None]:
+        """Sum units per round; a missing, non-array or empty Matching left column invalidates its total."""
         if not round_ids:
             return {}
+        left = Question.payload["left"]
+        units = case(
+            (Question.type != "matching", 1),
+            (func.jsonb_typeof(left) == "array", func.jsonb_array_length(left)),
+            else_=0,
+        )
+        total = case((func.min(units) > 0, func.sum(units)))
         rows = self.db.execute(
-            select(Question.activity_id, func.count(Question.id))
+            select(Question.activity_id, total)
             .where(Question.activity_id.in_(round_ids), Question.source == "round")
             .group_by(Question.activity_id)
         ).all()

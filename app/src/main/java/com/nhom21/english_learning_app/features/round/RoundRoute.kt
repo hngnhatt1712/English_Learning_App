@@ -16,6 +16,10 @@ internal fun RoundRoute(onExit: () -> Unit, onSubmitted: () -> Unit, viewModel: 
         Round1UiState.Locked -> RoundStatus(RoundMessage.Locked, onExit, viewModel::retry)
         Round1UiState.Error -> RoundStatus(RoundMessage.LoadFailed, onExit, viewModel::retry)
         is Round1UiState -> Round1ContentRoute(current, onExit, viewModel)
+        is Round3UiState -> RoundStatus(RoundMessage.Unsupported, {
+            viewModel.leaveMatching()
+            onExit()
+        }, viewModel::retry)
         is Round2UiState -> {
             val question = (current as? Round2UiState.Question)?.question
             val audio = key(question?.id) { rememberRound1Audio(question?.audioUrl) }
