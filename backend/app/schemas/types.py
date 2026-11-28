@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
-from pydantic import AfterValidator, PlainSerializer
+from pydantic import AfterValidator, PlainSerializer, WithJsonSchema
 
 USERNAME_PATTERN = r"^[A-Za-z0-9_.]+$"
 USERNAME_MIN = 3
@@ -23,4 +23,5 @@ UtcDatetime = Annotated[
     datetime,
     AfterValidator(_to_utc),
     PlainSerializer(_format_utc, return_type=str, when_used="json"),
+    WithJsonSchema({"type": "string", "format": "date-time"}, mode="serialization"),
 ]

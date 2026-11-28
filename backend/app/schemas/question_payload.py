@@ -5,11 +5,22 @@ from uuid import UUID
 from pydantic import AfterValidator, ConfigDict, Field, model_validator
 
 from app.core.schemas import CamelModel
+from app.utils.answer_text import normalize_answer_text
 from app.utils.media import validate_media_path
 
 Identifier = Annotated[str, Field(min_length=1)]
 NonEmptyText = Annotated[str, Field(min_length=1)]
 MediaPath = Annotated[str, AfterValidator(validate_media_path)]
+
+
+def non_blank_answer(text: str) -> str:
+    if not normalize_answer_text(text):
+        raise ValueError("Accepted answers must contain non-whitespace text")
+    return text
+
+
+AcceptedAnswers = Annotated[list[Annotated[str, AfterValidator(non_blank_answer)]], Field(min_length=1)]
+TokenSequence = Annotated[list[Identifier], Field(min_length=1)]
 
 
 class PayloadModel(CamelModel):
@@ -94,42 +105,59 @@ class MatchingPayload(PayloadModel):
     @model_validator(mode="after")
     def valid_pairs(self) -> Self:
         left, right = unique_ids(self.left), unique_ids(self.right)
+        if len(left) != len(right):
+            raise ValueError("Matching columns must have equal length")
         if (
             len(self.correct_pairs) != len(left)
             or {pair.left_id for pair in self.correct_pairs} != left
-            or any(pair.right_id not in right for pair in self.correct_pairs)
+            or {pair.right_id for pair in self.correct_pairs} != right
         ):
-            raise ValueError("Correct pairs must cover left exactly and reference right")
+            raise ValueError("Correct pairs must use every ID in each column exactly once")
         return self
 
 
 class FillBlankPayload(PayloadModel):
     sentence: NonEmptyText
     word_bank: list[str] | None
-    accepted_answers: list[NonEmptyText] = Field(min_length=1)
+    accepted_answers: AcceptedAnswers
 
     @model_validator(mode="after")
-    def has_blank(self) -> Self:
-        if "___" not in self.sentence or any(not text.strip() for text in self.accepted_answers):
-            raise ValueError("Sentence needs ___ and accepted answers must be nonempty")
+    def valid_blank(self) -> Self:
+        if "___" not in self.sentence:
+            raise ValueError("Sentence must contain ___")
+        if self.word_bank is not None:
+            accepted = set(map(normalize_answer_text, self.accepted_answers))
+            if accepted.isdisjoint(map(normalize_answer_text, self.word_bank)):
+                raise ValueError("Word bank must include at least one accepted answer")
         return self
 
 
-class SentenceOrderPayload(PayloadModel):
+class TokenSequencePayload(PayloadModel):
     tokens: list[TextOption] = Field(min_length=1)
-    accepted_sequences: list[list[Identifier]] = Field(min_length=1)
+    accepted_sequences: list[TokenSequence] = Field(min_length=1)
 
     @model_validator(mode="after")
     def valid_sequences(self) -> Self:
         ids = unique_ids(self.tokens)
-        if any(len(sequence) != len(ids) or set(sequence) != ids for sequence in self.accepted_sequences):
-            raise ValueError("Every accepted sequence must use exactly the token IDs")
+        for sequence in self.accepted_sequences:
+            sequence_ids = set(sequence)
+            if len(sequence_ids) != len(sequence) or not sequence_ids.issubset(ids):
+                raise ValueError("Accepted sequences must use unique token IDs belonging to the question")
         return self
 
 
-class TranslatePayload(SentenceOrderPayload):
+class SentenceOrderPayload(TokenSequencePayload):
+    @model_validator(mode="after")
+    def uses_all_tokens(self) -> Self:
+        if any(len(sequence) != len(self.tokens) for sequence in self.accepted_sequences):
+            raise ValueError("Every accepted sentence order must use all token IDs")
+        return self
+
+
+class TranslatePayload(TokenSequencePayload):
     source_text: NonEmptyText
     direction: Literal["en_to_vi", "vi_to_en"]
+    accepted_answers: AcceptedAnswers
 
 
 QuestionPayload = (

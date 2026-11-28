@@ -14,6 +14,7 @@ import com.nhom21.english_learning_app.core.network.ApiErrorType
 import com.nhom21.english_learning_app.core.network.ApiResult
 import com.nhom21.english_learning_app.core.ui.components.VocabularyAudioState
 import com.nhom21.english_learning_app.domain.model.Answer
+import com.nhom21.english_learning_app.domain.model.MatchingPair
 import com.nhom21.english_learning_app.domain.model.Question
 import com.nhom21.english_learning_app.domain.model.RoundAnswer
 import com.nhom21.english_learning_app.domain.model.QuestionContent
@@ -28,10 +29,12 @@ import com.nhom21.english_learning_app.domain.usecase.SwipeVocabularyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -85,6 +88,10 @@ class RoundViewModel internal constructor(
 
     private var recognitionQuestions = emptyList<Round2Question>()
     private val answers = linkedMapOf<String, RoundAnswer>()
+    private var matchingQuestions = emptyList<MatchingQuestion>()
+    private var matchingScoringUnits = 0
+    private var matchingRequest: Job? = null
+    private var matchingFeedbackId = 0L
 
     init {
         load()
@@ -142,6 +149,10 @@ class RoundViewModel internal constructor(
             is Round2UiState.Submitting -> {
                 if (state.error != null) submitRecognition()
             }
+            is Round3UiState.Submitting -> {
+                if (state.error != null) submitMatching()
+            }
+            is Round3UiState.Completed -> load()
             is Round2UiState.Completed, is Round2UiState.Message, Round1UiState.Error -> load()
             is Round1UiState.Learning, is Round1UiState.Finishing -> {
                 syncError = null
@@ -181,6 +192,10 @@ class RoundViewModel internal constructor(
                     when (round.type) {
                         RoundType.RECOGNITION -> {
                             startRecognition(questions)
+                            return@launch
+                        }
+                        RoundType.MATCHING -> {
+                            startMatching(questions, round.totalQuestions)
                             return@launch
                         }
                         RoundType.LEARN -> Unit
@@ -324,6 +339,141 @@ class RoundViewModel internal constructor(
                 } else Round2UiState.Submitting(response.error.type)
             }
         }
+    }
+
+    private fun startMatching(questions: List<Question>, totalQuestions: Int) {
+        if (questions.isEmpty()) {
+            mutableState.value = Round2UiState.Message(RoundMessage.Empty)
+            return
+        }
+        if (questions.distinctBy { it.id }.size != questions.size) {
+            mutableState.value = Round2UiState.Message(RoundMessage.InvalidContent)
+            return
+        }
+        matchingQuestions = questions.sortedBy { it.order }.map { question ->
+            val content = question.content as? QuestionContent.Matching
+            if (content == null || content.left.isEmpty() || content.left.size != content.right.size ||
+                content.left.distinctBy { it.id }.size != content.left.size ||
+                content.right.distinctBy { it.id }.size != content.right.size
+            ) {
+                mutableState.value = Round2UiState.Message(RoundMessage.InvalidContent)
+                return
+            }
+            MatchingQuestion(question.id, question.prompt, content.left, content.right)
+        }
+        answers.clear()
+        matchingScoringUnits = totalQuestions
+        mutableState.value = matchingQuestion(0)
+    }
+
+    private fun matchingQuestion(index: Int) = Round3UiState.Question(
+        matchingQuestions[index], index + 1, matchingQuestions.size, matchingScoringUnits, savedStars,
+    )
+
+    fun selectMatchingLeft(questionId: String, leftId: String) {
+        val state = editableMatching(questionId) ?: return
+        if (state.question.left.none { it.id == leftId } || state.pairs.any { it.leftId == leftId }) return
+        selectMatching(state.copy(selectedLeftId = leftId))
+    }
+
+    fun selectMatchingRight(questionId: String, rightId: String) {
+        val state = editableMatching(questionId) ?: return
+        if (state.question.right.none { it.id == rightId } || state.pairs.any { it.rightId == rightId }) return
+        selectMatching(state.copy(selectedRightId = rightId))
+    }
+
+    private fun editableMatching(questionId: String): Round3UiState.Question? =
+        (mutableState.value as? Round3UiState.Question)?.takeIf {
+            it.question.id == questionId && it.pendingPair == null && it.feedback?.isCorrect != false
+        }
+
+    private fun selectMatching(selection: Round3UiState.Question) {
+        val state = selection.copy(feedback = null, checkError = null)
+        val left = state.selectedLeftId
+        val right = state.selectedRightId
+        if (left == null || right == null) {
+            mutableState.value = state
+            return
+        }
+        val pair = MatchingPair(left, right)
+        val pending = state.copy(pendingPair = pair)
+        val ready = state.copy(selectedLeftId = null, selectedRightId = null)
+        val questionId = state.question.id
+        mutableState.value = pending
+        matchingRequest = viewModelScope.launch {
+            try {
+                val response = checkAnswer(questionId, Answer.MatchingCheck(pair))
+                ensureActive()
+                if (mutableState.value !== pending) return@launch
+                mutableState.value = when (response) {
+                    is ApiResult.Success -> {
+                        val result = response.data
+                        if (result.questionId != questionId || result.correctAnswer != null ||
+                            result.explanation != null || result.pairResults != null
+                        ) {
+                            ready.copy(checkError = ApiErrorType.UNKNOWN)
+                        } else {
+                            ready.copy(
+                                feedback = MatchingFeedback(++matchingFeedbackId, pair, result.isCorrect),
+                                pairs = if (result.isCorrect) state.pairs + pair else state.pairs,
+                                attempts = state.attempts + pair,
+                            )
+                        }
+                    }
+                    is ApiResult.Failure -> if (response.error.type == ApiErrorType.ROUND_LOCKED) {
+                        Round2UiState.Message(RoundMessage.Locked)
+                    } else ready.copy(checkError = response.error.type)
+                }
+            } catch (cancelled: CancellationException) {
+                if (mutableState.value === pending) mutableState.value = ready.copy(checkError = ApiErrorType.NETWORK)
+                throw cancelled
+            }
+        }
+    }
+
+    fun acknowledgeMatchingFeedback(questionId: String, feedbackId: Long) {
+        val state = mutableState.value as? Round3UiState.Question ?: return
+        if (state.question.id == questionId && state.feedback?.id == feedbackId) {
+            mutableState.value = state.copy(feedback = null)
+        }
+    }
+
+    fun nextMatchingQuestion(questionId: String) {
+        val state = editableMatching(questionId) ?: return
+        if (!state.canContinue) return
+        answers[questionId] = RoundAnswer(questionId, Answer.Matching(state.pairs, state.attempts))
+        if (state.number < state.questionCount) mutableState.value = matchingQuestion(state.number)
+        else submitMatching()
+    }
+
+    private fun submitMatching() {
+        val payload = matchingQuestions.map { answers.getValue(it.id) }
+        val pending = Round3UiState.Submitting()
+        mutableState.value = pending
+        matchingRequest = viewModelScope.launch {
+            try {
+                val response = submitRound(roundId, payload)
+                ensureActive()
+                if (mutableState.value !== pending) return@launch
+                mutableState.value = when (response) {
+                    is ApiResult.Success -> if (response.data.roundId == roundId) {
+                        Round3UiState.Completed(response.data, ++resultSequence)
+                    } else Round3UiState.Submitting(ApiErrorType.UNKNOWN)
+                    is ApiResult.Failure -> if (response.error.type == ApiErrorType.ROUND_LOCKED) {
+                        Round2UiState.Message(RoundMessage.Locked)
+                    } else Round3UiState.Submitting(response.error.type)
+                }
+            } catch (cancelled: CancellationException) {
+                if (mutableState.value === pending) mutableState.value = Round3UiState.Submitting(ApiErrorType.NETWORK)
+                throw cancelled
+            }
+        }
+    }
+
+    fun leaveMatching() {
+        if (mutableState.value !is Round3UiState) return
+        mutableState.value = Round3UiState.Exited
+        matchingRequest?.cancel()
     }
 
     private fun sync() {

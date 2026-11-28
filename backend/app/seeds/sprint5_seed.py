@@ -55,6 +55,7 @@ CSV_FIELDS = (
     "image_filename",
     "audio_filename",
     "picture_distractors",
+    "example",
 )
 
 
@@ -72,6 +73,7 @@ class VocabularySeed:
     image_filename: str
     audio_filename: str
     picture_distractors: str
+    example: str
 
     @property
     def label(self) -> str:
@@ -279,6 +281,7 @@ def build_seed_rows(data_file: Path = DATA_FILE, static_root: Path = STATIC_ROOT
                 "meaning": item.meaning,
                 "part_of_speech": item.part_of_speech,
                 "phonetic": item.phonetic,
+                "example": item.example,
                 "image_url": _media_path(root, item, "image", item.image_filename, ".png"),
                 "audio_url": _media_path(root, item, "audio", item.audio_filename, ".mp3"),
             }

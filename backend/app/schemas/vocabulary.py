@@ -5,6 +5,12 @@ from uuid import UUID
 from app.core.schemas import CamelModel
 
 VocabularyStatus = Literal["new", "skipped", "in_flashcard", "learning", "review", "mastered"]
+VocabularySort = Literal["word", "-word"]
+SrsRating = Literal["again", "hard", "good", "easy"]
+PartOfSpeech = Literal[
+    "noun", "verb", "adjective", "adverb", "pronoun", "preposition",
+    "conjunction", "interjection", "phrase", "other",
+]
 
 
 class VocabularyDto(CamelModel):
@@ -13,10 +19,7 @@ class VocabularyDto(CamelModel):
     level_id: UUID
     word: str
     meaning: str
-    part_of_speech: Literal[
-        "noun", "verb", "adjective", "adverb", "pronoun", "preposition",
-        "conjunction", "interjection", "phrase", "other",
-    ]
+    part_of_speech: PartOfSpeech
     phonetic: str
     example: str | None
     image_url: str | None

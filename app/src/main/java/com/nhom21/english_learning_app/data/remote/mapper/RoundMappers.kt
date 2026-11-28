@@ -1,10 +1,12 @@
 package com.nhom21.english_learning_app.data.remote.mapper
 
 import com.nhom21.english_learning_app.data.remote.dto.AnswerDto
+import com.nhom21.english_learning_app.data.remote.dto.CheckAnswerDto
 import com.nhom21.english_learning_app.data.remote.dto.FillBlankAnswerDto
 import com.nhom21.english_learning_app.data.remote.dto.FillBlankQuestionDto
 import com.nhom21.english_learning_app.data.remote.dto.LearnCardQuestionDto
 import com.nhom21.english_learning_app.data.remote.dto.MatchingAnswerDto
+import com.nhom21.english_learning_app.data.remote.dto.MatchingCheckAnswerDto
 import com.nhom21.english_learning_app.data.remote.dto.MatchingItemDto
 import com.nhom21.english_learning_app.data.remote.dto.MatchingPairDto
 import com.nhom21.english_learning_app.data.remote.dto.MatchingQuestionDto
@@ -36,6 +38,7 @@ import com.nhom21.english_learning_app.data.remote.dto.VocabularyStatusDto
 import com.nhom21.english_learning_app.domain.model.Answer
 import com.nhom21.english_learning_app.domain.model.MatchingItem
 import com.nhom21.english_learning_app.domain.model.MatchingPair
+import com.nhom21.english_learning_app.domain.model.MatchingPairResult
 import com.nhom21.english_learning_app.domain.model.PictureOption
 import com.nhom21.english_learning_app.domain.model.Question
 import com.nhom21.english_learning_app.domain.model.QuestionContent
@@ -96,7 +99,8 @@ private fun TranslationDirectionDto.toDomain(): TranslationDirection = when (thi
 internal fun Answer.toDto(): AnswerDto = when (this) {
     is Answer.MultipleChoice -> MultipleChoiceAnswerDto(optionId)
     is Answer.PictureChoice -> PictureChoiceAnswerDto(optionId)
-    is Answer.Matching -> MatchingAnswerDto(pairs.map { MatchingPairDto(it.leftId, it.rightId) })
+    is Answer.MatchingCheck -> error("A Matching check answer cannot be submitted")
+    is Answer.Matching -> MatchingAnswerDto(pairs.map(MatchingPair::toDto), attempts.map(MatchingPair::toDto))
     is Answer.FillBlank -> FillBlankAnswerDto(text)
     is Answer.Translate -> TranslateAnswerDto(tokenIds)
     is Answer.SentenceOrder -> SentenceOrderAnswerDto(tokenIds)
@@ -104,10 +108,18 @@ internal fun Answer.toDto(): AnswerDto = when (this) {
     is Answer.SentenceCompletion -> SentenceCompletionAnswerDto(optionId)
 }
 
+internal fun Answer.toCheckDto(): CheckAnswerDto = when (this) {
+    is Answer.MatchingCheck -> MatchingCheckAnswerDto(pair.leftId, pair.rightId)
+    else -> toDto() as? CheckAnswerDto ?: error("A Matching submit answer cannot be checked")
+}
+
+private fun MatchingPair.toDto() = MatchingPairDto(leftId, rightId)
+private fun MatchingPairDto.toDomain() = MatchingPair(leftId, rightId)
+
 private fun AnswerDto.toDomain(): Answer = when (this) {
     is MultipleChoiceAnswerDto -> Answer.MultipleChoice(optionId)
     is PictureChoiceAnswerDto -> Answer.PictureChoice(optionId)
-    is MatchingAnswerDto -> Answer.Matching(pairs.map { MatchingPair(it.leftId, it.rightId) })
+    is MatchingAnswerDto -> Answer.Matching(pairs.map(MatchingPairDto::toDomain), attempts.map(MatchingPairDto::toDomain))
     is FillBlankAnswerDto -> Answer.FillBlank(text)
     is TranslateAnswerDto -> Answer.Translate(tokenIds)
     is SentenceOrderAnswerDto -> Answer.SentenceOrder(tokenIds)
@@ -117,7 +129,10 @@ private fun AnswerDto.toDomain(): Answer = when (this) {
 
 internal fun RoundAnswer.toDto() = SubmitRoundAnswer(questionId, answer.toDto())
 
-internal fun QuestionResultDto.toDomain() = QuestionResult(questionId, isCorrect, correctAnswer.toDomain(), explanation)
+internal fun QuestionResultDto.toDomain() = QuestionResult(
+    questionId, isCorrect, correctAnswer?.toDomain(), explanation,
+    pairResults?.map { MatchingPairResult(it.leftId, it.isCorrect) },
+)
 
 internal fun RoundResultDto.toDomain() = RoundResult(
     roundId = roundId,

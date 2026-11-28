@@ -10,6 +10,7 @@ import com.nhom21.english_learning_app.data.remote.dto.CheckAnswerRequest
 import com.nhom21.english_learning_app.data.remote.dto.SubmitRoundRequest
 import com.nhom21.english_learning_app.data.remote.dto.VocabularyActionRequest
 import com.nhom21.english_learning_app.data.remote.mapper.toDomain
+import com.nhom21.english_learning_app.data.remote.mapper.toCheckDto
 import com.nhom21.english_learning_app.data.remote.mapper.toDto
 import com.nhom21.english_learning_app.domain.model.Answer
 import com.nhom21.english_learning_app.domain.model.QuestionResult
@@ -44,7 +45,7 @@ class RoundRepositoryImpl @Inject constructor(
 
     override suspend fun checkAnswer(questionId: String, answer: Answer): ApiResult<QuestionResult> =
         errorParser.callApi({
-            questionApi.checkAnswer(questionId, CheckAnswerRequest(answer.toDto()))
+            questionApi.checkAnswer(questionId, CheckAnswerRequest(answer.toCheckDto()))
         }) { it.toDomain() }
 
     override suspend fun submitRound(roundId: String, answers: List<RoundAnswer>): ApiResult<RoundResult> =

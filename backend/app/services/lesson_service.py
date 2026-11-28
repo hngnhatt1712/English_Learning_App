@@ -8,6 +8,7 @@ from app.repositories.lesson_repository import LessonRepository
 from app.repositories.round_repository import RoundRepository
 from app.schemas.enums import ContentStatus
 from app.schemas.lesson import LessonDetailDto, LessonSummaryDto
+from app.services.round_content import content_error
 from app.services.round_service import round_dto
 from app.services.topic_service import get_topic_state
 
@@ -28,15 +29,18 @@ class LessonService:
             raise AppError(403, ErrorType.TOPIC_LOCKED, "Topic is locked")
         activities = self.rounds.get_by_lesson(lesson.id)
         ids = [activity.id for activity in activities]
-        counts = self.rounds.question_counts(ids)
+        counts = self.rounds.scoring_unit_counts(ids)
         progress = self.rounds.progress_by_ids(user_id, ids)
         by_number = {activity.round_number: activity for activity in activities}
         rounds = []
         for activity in activities:
+            total = counts.get(activity.id, 0)
+            if total is None:
+                raise content_error()
             previous = by_number.get(activity.round_number - 1)
             rounds.append(round_dto(
                 activity, progress.get(activity.id), progress.get(previous.id) if previous else None,
-                True, counts.get(activity.id, 0),
+                True, total,
             ))
         return LessonDetailDto(**LessonSummaryDto.model_validate(lesson).model_dump(), rounds=rounds)
 
