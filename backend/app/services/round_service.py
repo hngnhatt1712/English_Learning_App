@@ -5,13 +5,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy.orm import Session
-
 from app.core.errors import AppError, ErrorType
 from app.models.activity import Activity
 from app.models.progress import UserRoundProgress
 from app.models.question import Question
 from app.models.user import User
+from app.repositories.quiz_repository import VOCABULARY_QUIZ_TYPES
 from app.repositories.round_repository import RoundRepository
 from app.repositories.vocabulary_repository import VocabularyRepository
 from app.schemas.enums import ContentStatus
@@ -57,6 +56,10 @@ from app.schemas.round import (
     VocabularyActionResultDto,
 )
 from app.services.level_progress_provider import get_user_level_progress
+from app.services.quiz_service import (
+    require_vocabulary_quiz_topic,
+    vocabulary_quiz_payload,
+)
 from app.services.round_content import (
     content_error,
     question_dto,
@@ -67,6 +70,7 @@ from app.services.round_content import (
 from app.services.streak_service import touch
 from app.services.topic_service import get_topic_states_for_level
 from app.utils.answer_text import normalize_answer_text
+from sqlalchemy.orm import Session
 
 GRADED_QUESTION_TYPES_BY_ROUND = {
     "recognition": frozenset({"multiple_choice", "picture_choice"}),
@@ -274,9 +278,10 @@ class RoundService:
         question = self.rounds.question_by_id(question_id)
         if question is None:
             raise AppError(404, ErrorType.NOT_FOUND, "Question not found")
+        if question.source == "vocabulary_quiz":
+            return self._check_vocabulary_quiz(user, question, body.answer)
         if question.source != "round" or question.activity_id is None:
-            # Grammar/Vocabulary Quiz have no runtime access policy in this sprint.
-            # Fail closed before parsing or returning their answers.
+            # Sources without a runtime access policy must not return feedback.
             raise AppError(403, ErrorType.FORBIDDEN, "Question source is not available")
         current = self._accessible_round(user, question.activity_id)
         payload = stored_payload(question)
@@ -300,6 +305,20 @@ class RoundService:
         ):
             raise invalid("answer.type", "Question checking is not available for this type")
         return grade_question(question, payload, body.answer, "answer")
+
+    def _check_vocabulary_quiz(self, user: User, question: Question, answer: CheckAnswerDto) -> QuestionResultDto:
+        if question.topic_id is None or any(
+            value is not None for value in (question.activity_id, question.grammar_lesson_id, question.purpose)
+        ):
+            raise AppError(403, ErrorType.FORBIDDEN, "Question source is not available")
+        require_vocabulary_quiz_topic(self.db, user, question.topic_id)
+        if question.type not in VOCABULARY_QUIZ_TYPES:
+            raise invalid("answer.type", "Question checking is not available for this type")
+        try:
+            payload = vocabulary_quiz_payload(question)
+        except ValueError:
+            raise content_error() from None
+        return grade_question(question, payload, answer, "answer")
 
     def submit_round(self, user: User, round_id: UUID, body: SubmitRoundRequest) -> RoundResultDto:
         try:
