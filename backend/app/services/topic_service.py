@@ -83,6 +83,8 @@ def get_topic_state(
     db: Session,
     user_id: uuid.UUID,
     topic_id: uuid.UUID,
+    *,
+    snapshot: UserLevelProgress | None = None,
 ) -> TopicState:
     """Return a topic's state in the context of all topics in its level."""
     topic = TopicRepository(db).get_by_id(topic_id)
@@ -92,11 +94,32 @@ def get_topic_state(
         db,
         user_id,
         topic.level_id,
+        snapshot=snapshot,
     )
     for state in states:
         if state.topic.id == topic_id:
             return state
     raise AppError(404, ErrorType.NOT_FOUND, "Topic not found")
+
+
+def get_accessible_topic_ids(
+    db: Session, snapshot: UserLevelProgress, level_id: uuid.UUID | None = None,
+) -> list[uuid.UUID]:
+    """Apply the existing Topic unlock rule to a batch across accessible levels."""
+    levels = [level_id] if level_id is not None else list(snapshot.statuses)
+    repo = TopicRepository(db)
+    topics_by_level: dict[uuid.UUID, list[Topic]] = {}
+    for topic in repo.get_by_level_ids([key for key in levels if snapshot.is_unlocked(key)]):
+        topics_by_level.setdefault(topic.level_id, []).append(topic)
+    progress = repo.get_progress_by_topic_ids(
+        snapshot.user_id, [topic.id for topics in topics_by_level.values() for topic in topics],
+    )
+    return [
+        state.topic.id
+        for topics in topics_by_level.values()
+        for state in compute_topic_states(topics, progress, level_unlocked=True)
+        if state.status != ContentStatus.LOCKED
+    ]
 
 
 def _topic_dto(state: TopicState, totals: tuple[int, int] | None = None) -> TopicDto:

@@ -63,8 +63,9 @@ def effective_streak(current: int, last: date | None, today: date) -> int:
     return current
 
 
-def touch(user: User) -> StreakDto:
-    today = today_vn()
+def touch(user: User, *, today: date | None = None) -> StreakDto:
+    if today is None:
+        today = today_vn()
     if user.last_learning_date != today:
         yesterday = user.last_learning_date is not None and (today - user.last_learning_date).days == 1
         user.current_streak = user.current_streak + 1 if yesterday else 1

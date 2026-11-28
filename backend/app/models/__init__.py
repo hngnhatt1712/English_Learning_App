@@ -9,6 +9,7 @@ from app.models.progress import (
     UserVocabularyProgress,
 )
 from app.models.question import Question
+from app.models.quiz import QuizAnswer, QuizAttempt
 from app.models.topic import Topic
 from app.models.user import User
 from app.models.vocabulary import Vocabulary
@@ -20,6 +21,8 @@ __all__ = [
     "Level",
     "PasswordResetRequest",
     "Question",
+    "QuizAnswer",
+    "QuizAttempt",
     "Topic",
     "User",
     "UserRoundProgress",

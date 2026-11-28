@@ -37,10 +37,12 @@ from app.api import home
 
 app.include_router(home.router, prefix="/api/v1")
 
-from app.api import questions, rounds
+from app.api import flashcards, questions, rounds, vocabulary
 
 app.include_router(rounds.router, prefix="/api/v1")
 app.include_router(questions.router, prefix="/api/v1")
+app.include_router(flashcards.router, prefix="/api/v1")
+app.include_router(vocabulary.router, prefix="/api/v1")
 
 
 @app.get("/")

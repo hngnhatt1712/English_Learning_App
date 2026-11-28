@@ -40,6 +40,12 @@ class TopicRepository:
         )
         return list(self.db.scalars(stmt).all())
 
+    def get_by_level_ids(self, level_ids: Sequence[uuid.UUID]) -> list[Topic]:
+        """Fetch Topic content for multiple levels in a single query."""
+        if not level_ids:
+            return []
+        return list(self.db.scalars(select(Topic).where(Topic.level_id.in_(level_ids))))
+
     def get_progress_by_topic_ids(
         self,
         user_id: uuid.UUID,

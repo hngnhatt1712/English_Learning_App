@@ -1,91 +1,91 @@
-topic,word,part_of_speech,phonetic,meaning,image_filename,audio_filename,picture_distractors
-1.1,mother,noun,/ˈmʌð.ər/,mẹ,mother.png,mother.mp3,home|name|friend
-1.1,father,noun,/ˈfɑː.ðər/,bố,father.png,father.mp3,baby|home|name
-1.1,baby,noun,/ˈbeɪ.bi/,em bé,baby.png,baby.mp3,home|age|father
-1.1,brother,noun,/ˈbrʌð.ər/,anh trai / em trai,brother.png,brother.mp3,
-1.1,sister,noun,/ˈsɪs.tər/,chị gái / em gái,sister.png,sister.mp3,
-1.1,family,noun,/ˈfæm.əl.i/,gia đình,family.png,family.mp3,
-1.1,friend,noun,/frend/,bạn bè,friends.png,friend.mp3,baby|home|name
-1.1,home,noun,/həʊm/,"nhà, tổ ấm",home.png,home.mp3,baby|father|name
-1.1,name,noun,/neɪm/,tên,name.png,name.mp3,
-1.1,age,noun,/eɪdʒ/,tuổi,age.png,age.mp3,
-1.2,sleep,verb,/sliːp/,ngủ,sleep.png,sleep.mp3,football|cook|draw
-1.2,cook,verb,/kʊk/,nấu ăn,cook.png,cook.mp3,read|music|game
-1.2,read,verb,/riːd/,đọc sách,read.png,read.mp3,sleep|football|cook
-1.2,draw,verb,/drɔː/,vẽ tranh,draw.png,draw.mp3,game|cook|run
-1.2,dance,verb,/dɑːns/,nhảy múa,dance.png,dance.mp3,
-1.2,run,verb,/rʌn/,chạy bộ,run.png,run.mp3,
-1.2,football,noun,/ˈfʊt.bɔːl/,bóng đá,football.png,football.mp3,
-1.2,music,noun,/ˈmjuː.zɪk/,âm nhạc,music.png,music.mp3,run|read|cook
-1.2,game,noun,/ɡeɪm/,trò chơi,game.png,game.mp3,
-1.2,wake up,phrase,/weɪk ʌp/,thức dậy,wake-up.png,wake-up.mp3,
-1.3,milk,noun,/mɪlk/,sữa,milk.png,milk.mp3,shirt|shoes|fruit
-1.3,shirt,noun,/ʃɜːt/,áo sơ mi,shirt.png,shirt.mp3,milk|fruit|coffee
-1.3,shoes,noun,/ʃuːz/,đôi giày,shoes.png,shoes.mp3,fruit|milk|water
-1.3,hat,noun,/hæt/,cái mũ,hat.png,hat.mp3,water|milk|fruit
-1.3,fruit,noun,/fruːt/,trái cây,fruits.png,fruit.mp3,shirt|milk|shoes
-1.3,coffee,noun,/ˈkɒf.i/,cà phê,coffee.png,coffee.mp3,
-1.3,chicken,noun,/ˈtʃɪk.ɪn/,thịt gà,chicken.png,chicken.mp3,
-1.3,water,noun,/ˈwɔː.tər/,nước,water.png,water.mp3,
-1.3,money,noun,/ˈmʌn.i/,tiền,money.png,money.mp3,
-1.3,buy,verb,/baɪ/,mua,buy.png,buy.mp3,
-2.1,airport,noun,/ˈeə.pɔːt/,sân bay,airport.png,airport.mp3,luggage|map|hotel
-2.1,passport,noun,/ˈpɑːs.pɔːt/,hộ chiếu,passport.png,passport.mp3,hotel|luggage|subway
-2.1,luggage,noun,/ˈlʌɡ.ɪdʒ/,hành lý,luggage.png,luggage.mp3,hotel|map|passport
-2.1,map,noun,/mæp/,bản đồ,map.png,map.mp3,luggage|hotel|subway
-2.1,station,noun,/ˈsteɪ.ʃən/,"nhà ga, trạm",station.png,station.mp3,
-2.1,subway,noun,/ˈsʌb.weɪ/,tàu điện ngầm,subway.png,subway.mp3,
-2.1,hotel,noun,/həʊˈtel/,khách sạn,hotel.png,hotel.mp3,passport|luggage|subway
-2.1,ticket,noun,/ˈtɪk.ɪt/,vé,ticket.png,ticket.mp3,
-2.1,tourist,noun,/ˈtʊə.rɪst/,khách du lịch,tourist.png,tourist.mp3,
-2.1,guide,noun,/ɡaɪd/,hướng dẫn viên,guide.png,guide.mp3,
-2.2,laptop,noun,/ˈlæp.tɒp/,máy tính xách tay,laptop.png,laptop.mp3,graduate|library|exam
-2.2,library,noun,/ˈlaɪ.brər.i/,thư viện,library.png,library.mp3,laptop|exam|graduate
-2.2,office,noun,/ˈɒf.ɪs/,văn phòng,office.png,office.mp3,laptop|exam|graduate
-2.2,graduate,verb,/ˈɡrædʒ.u.eɪt/,tốt nghiệp,graduate.png,graduate.mp3,laptop|office|library
-2.2,manager,noun,/ˈmæn.ɪ.dʒər/,người quản lý,manager.png,manager.mp3,
-2.2,project,noun,/ˈprɒdʒ.ekt/,dự án,project.png,project.mp3,
-2.2,meeting,noun,/ˈmiː.tɪŋ/,cuộc họp,meeting.png,meeting.mp3,exam|laptop|library
-2.2,exam,noun,/ɪɡˈzæm/,kỳ thi,exam.png,exam.mp3,
-2.2,colleague,noun,/ˈkɒl.iːɡ/,đồng nghiệp,colleague.png,colleague.mp3,
-2.2,busy,adjective,/ˈbɪz.i/,bận rộn,busy.png,busy.mp3,
-2.3,hospital,noun,/ˈhɒs.pɪ.təl/,bệnh viện,hospital.png,hospital.mp3,relax|cough|exercise
-2.3,medicine,noun,/ˈmed.ɪ.sən/,thuốc,medicine.png,medicine.mp3,relax|cough|exercise
-2.3,cough,verb,/kɒf/,ho,cough.png,cough.mp3,hospital|exercise|relax
-2.3,headache,noun,/ˈhed.eɪk/,đau đầu,headache.png,headache.mp3,
-2.3,stress,noun,/stres/,căng thẳng,stress.png,stress.mp3,
-2.3,exercise,verb,/ˈek.sə.saɪz/,tập thể dục,exercise.png,exercise.mp3,cough|hospital|sleepy
-2.3,relax,verb,/rɪˈlæks/,thư giãn,relax.png,relax.mp3,medicine|cough|hospital
-2.3,habit,noun,/ˈhæb.ɪt/,thói quen,habit.png,habit.mp3,
-2.3,healthy,adjective,/ˈhel.θi/,"khỏe mạnh, lành mạnh",healthy.png,healthy.mp3,
-2.3,sleepy,adjective,/ˈsliː.pi/,buồn ngủ,sleepy.png,sleepy.mp3,
-3.1,cinema,noun,/ˈsɪn.ə.mə/,rạp chiếu phim,cinema.png,cinema.mp3,instrument|costume|exhibition
-3.1,museum,noun,/mjuːˈziː.əm/,bảo tàng,museum.png,museum.mp3,costume|instrument|concert
-3.1,concert,noun,/ˈkɒn.sət/,buổi hòa nhạc,concert.png,concert.mp3,
-3.1,festival,noun,/ˈfes.tɪ.vəl/,lễ hội,festival.png,festival.mp3,
-3.1,instrument,noun,/ˈɪn.strə.mənt/,nhạc cụ,instruments.png,instrument.mp3,cinema|museum|costume
-3.1,costume,noun,/ˈkɒs.tjuːm/,trang phục biểu diễn,costume.png,costume.mp3,cinema|instrument|museum
-3.1,exhibition,noun,/ˌek.sɪˈbɪʃ.ən/,cuộc triển lãm,exhibition.png,exhibition.mp3,instrument|concert|costume
-3.1,audience,noun,/ˈɔː.di.əns/,khán giả,audience.png,audience.mp3,
-3.1,tradition,noun,/trəˈdɪʃ.ən/,truyền thống,traditional.png,tradition.mp3,
-3.1,popular,adjective,/ˈpɒp.jə.lər/,"phổ biến, nổi tiếng",popular.png,popular.mp3,
-3.2,satellite,noun,/ˈsæt.əl.aɪt/,vệ tinh,satellite.png,satellite.mp3,resume|engineer|smartphone
-3.2,smartphone,noun,/ˈsmɑːt.fəʊn/,điện thoại thông minh,smartphone.png,smartphone.mp3,engineer|database|satellite
-3.2,engineer,noun,/ˌen.dʒɪˈnɪər/,kỹ sư,engineer.png,engineer.mp3,satellite|database|smartphone
-3.2,resume,noun,/ˈrez.juː.meɪ/,sơ yếu lý lịch (CV),resume.png,resume.mp3,satellite|engineer|database
-3.2,database,noun,/ˈdeɪ.tə.beɪs/,cơ sở dữ liệu,database.png,database.mp3,smartphone|satellite|resume
-3.2,algorithm,noun,/ˈæl.ɡə.rɪ.ðəm/,thuật toán,algorithm.png,algorithm.mp3,
-3.2,software,noun,/ˈsɒft.weər/,phần mềm,software.png,software.mp3,
-3.2,develop,verb,/dɪˈvel.əp/,phát triển,develop.png,develop.mp3,
-3.2,innovative,adjective,/ˈɪn.ə.və.tɪv/,mang tính đổi mới,innovative.png,innovative.mp3,
-3.2,artificial,adjective,/ˌɑː.tɪˈfɪʃ.əl/,nhân tạo,artificial.png,artificial.mp3,
-3.3,forest,noun,/ˈfɒr.ɪst/,khu rừng,forest.png,forest.mp3,plastic|recycling|volunteer
-3.3,recycling,noun,/ˌriːˈsaɪ.klɪŋ/,việc tái chế,recycling.png,recycling.mp3,forest|volunteer|earthquake
-3.3,plastic,noun,/ˈplæs.tɪk/,nhựa,plastic.png,plastic.mp3,forest|earthquake|volunteer
-3.3,volunteer,noun,/ˌvɒl.ənˈtɪər/,tình nguyện viên,volunteer.png,volunteer.mp3,
-3.3,earthquake,noun,/ˈɜːθ.kweɪk/,trận động đất,earthquake.png,earthquake.mp3,plastic|volunteer|recycling
-3.3,wildlife,noun,/ˈwaɪld.laɪf/,động vật hoang dã,wildlife.png,wildlife.mp3,recycling|plastic|charity
-3.3,charity,noun,/ˈtʃær.ə.ti/,tổ chức từ thiện,charity.png,charity.mp3,
-3.3,pollution,noun,/pəˈluː.ʃən/,sự ô nhiễm,pollution.png,pollution.mp3,
-3.3,climate,noun,/ˈklaɪ.mət/,khí hậu,climate.png,climate.mp3,
-3.3,society,noun,/səˈsaɪ.ə.ti/,xã hội,society.png,society.mp3,
+topic,word,part_of_speech,phonetic,meaning,image_filename,audio_filename,picture_distractors,example
+1.1,mother,noun,/ˈmʌð.ər/,mẹ,mother.png,mother.mp3,home|name|friend,My mother gave birth to me.
+1.1,father,noun,/ˈfɑː.ðər/,bố,father.png,father.mp3,baby|home|name,My father is my mother's husband.
+1.1,baby,noun,/ˈbeɪ.bi/,em bé,baby.png,baby.mp3,home|age|father,The baby is just two days old.
+1.1,brother,noun,/ˈbrʌð.ər/,anh trai / em trai,brother.png,brother.mp3,,My brother is my parents' son.
+1.1,sister,noun,/ˈsɪs.tər/,chị gái / em gái,sister.png,sister.mp3,,My sister is my parents' daughter.
+1.1,family,noun,/ˈfæm.əl.i/,gia đình,family.png,family.mp3,,My whole family shares one last name.
+1.1,friend,noun,/frend/,bạn bè,friends.png,friend.mp3,baby|home|name,My friend from school plays with me.
+1.1,home,noun,/həʊm/,"nhà, tổ ấm",home.png,home.mp3,baby|father|name,Our home has three rooms and a garden.
+1.1,name,noun,/neɪm/,tên,name.png,name.mp3,,My name is spelled with four letters.
+1.1,age,noun,/eɪdʒ/,tuổi,age.png,age.mp3,,"My age is eight, just like yours."
+1.2,sleep,verb,/sliːp/,ngủ,sleep.png,sleep.mp3,football|cook|draw,I sleep with my eyes closed.
+1.2,cook,verb,/kʊk/,nấu ăn,cook.png,cook.mp3,read|music|game,I cook rice in a pot.
+1.2,read,verb,/riːd/,đọc sách,read.png,read.mp3,sleep|football|cook,I read the words on each page.
+1.2,draw,verb,/drɔː/,vẽ tranh,draw.png,draw.mp3,game|cook|run,I draw a cat with my pencil.
+1.2,dance,verb,/dɑːns/,nhảy múa,dance.png,dance.mp3,,We dance with steps that match the music.
+1.2,run,verb,/rʌn/,chạy bộ,run.png,run.mp3,,I run a mile in eight minutes.
+1.2,football,noun,/ˈfʊt.bɔːl/,bóng đá,football.png,football.mp3,,We play football with two goals.
+1.2,music,noun,/ˈmjuː.zɪk/,âm nhạc,music.png,music.mp3,run|read|cook,I listen to music with a steady beat.
+1.2,game,noun,/ɡeɪm/,trò chơi,game.png,game.mp3,,We play a game of hide and seek.
+1.2,wake up,phrase,/weɪk ʌp/,thức dậy,wake-up.png,wake-up.mp3,,I wake up from a deep sleep.
+1.3,milk,noun,/mɪlk/,sữa,milk.png,milk.mp3,shirt|shoes|fruit,We get milk from cows.
+1.3,shirt,noun,/ʃɜːt/,áo sơ mi,shirt.png,shirt.mp3,milk|fruit|coffee,This shirt has buttons down the front.
+1.3,shoes,noun,/ʃuːz/,đôi giày,shoes.png,shoes.mp3,fruit|milk|water,I tie my shoes before school.
+1.3,hat,noun,/hæt/,cái mũ,hat.png,hat.mp3,water|milk|fruit,My hat keeps the sun off my head.
+1.3,fruit,noun,/fruːt/,trái cây,fruits.png,fruit.mp3,shirt|milk|shoes,An apple is a kind of fruit.
+1.3,coffee,noun,/ˈkɒf.i/,cà phê,coffee.png,coffee.mp3,,Dad makes coffee from ground beans.
+1.3,chicken,noun,/ˈtʃɪk.ɪn/,thịt gà,chicken.png,chicken.mp3,,We eat roast chicken for dinner.
+1.3,water,noun,/ˈwɔː.tər/,nước,water.png,water.mp3,,I drink water from the tap.
+1.3,money,noun,/ˈmʌn.i/,tiền,money.png,money.mp3,,I count my money before I pay.
+1.3,buy,verb,/baɪ/,mua,buy.png,buy.mp3,,I buy bread with two coins.
+2.1,airport,noun,/ˈeə.pɔːt/,sân bay,airport.png,airport.mp3,luggage|map|hotel,Our plane landed at the airport before noon.
+2.1,passport,noun,/ˈpɑːs.pɔːt/,hộ chiếu,passport.png,passport.mp3,hotel|luggage|subway,The officer stamped my passport at the border.
+2.1,luggage,noun,/ˈlʌɡ.ɪdʒ/,hành lý,luggage.png,luggage.mp3,hotel|map|passport,My luggage weighs fifteen kilos at check-in.
+2.1,map,noun,/mæp/,bản đồ,map.png,map.mp3,luggage|hotel|subway,The map shows how to get from here to school.
+2.1,station,noun,/ˈsteɪ.ʃən/,"nhà ga, trạm",station.png,station.mp3,,Our train stops at the next station.
+2.1,subway,noun,/ˈsʌb.weɪ/,tàu điện ngầm,subway.png,subway.mp3,,The subway runs in tunnels under the city.
+2.1,hotel,noun,/həʊˈtel/,khách sạn,hotel.png,hotel.mp3,passport|luggage|subway,A hotel is a place where travelers pay to sleep.
+2.1,ticket,noun,/ˈtɪk.ɪt/,vé,ticket.png,ticket.mp3,,The conductor scanned my ticket on the train.
+2.1,tourist,noun,/ˈtʊə.rɪst/,khách du lịch,tourist.png,tourist.mp3,,The tourist took photos during her holiday abroad.
+2.1,guide,noun,/ɡaɪd/,hướng dẫn viên,guide.png,guide.mp3,,The museum guide leads tours and answers visitors' questions.
+2.2,laptop,noun,/ˈlæp.tɒp/,máy tính xách tay,laptop.png,laptop.mp3,graduate|library|exam,My laptop has a screen and a keyboard.
+2.2,library,noun,/ˈlaɪ.brər.i/,thư viện,library.png,library.mp3,laptop|exam|graduate,We borrow books from the library every week.
+2.2,office,noun,/ˈɒf.ɪs/,văn phòng,office.png,office.mp3,laptop|exam|graduate,His office has a desk where he takes calls.
+2.2,graduate,verb,/ˈɡrædʒ.u.eɪt/,tốt nghiệp,graduate.png,graduate.mp3,laptop|office|library,You will graduate after you finish your last year.
+2.2,manager,noun,/ˈmæn.ɪ.dʒər/,người quản lý,manager.png,manager.mp3,,The manager hired two new workers for the shop.
+2.2,project,noun,/ˈprɒdʒ.ekt/,dự án,project.png,project.mp3,,Our science project took weeks and will be displayed.
+2.2,meeting,noun,/ˈmiː.tɪŋ/,cuộc họp,meeting.png,meeting.mp3,exam|laptop|library,Our team held a meeting to discuss the new rules.
+2.2,exam,noun,/ɪɡˈzæm/,kỳ thi,exam.png,exam.mp3,,I answered all ten questions on the math exam.
+2.2,colleague,noun,/ˈkɒl.iːɡ/,đồng nghiệp,colleague.png,colleague.mp3,,My colleague and I work in the same office.
+2.2,busy,adjective,/ˈbɪz.i/,bận rộn,busy.png,busy.mp3,,I am busy doing homework right now.
+2.3,hospital,noun,/ˈhɒs.pɪ.təl/,bệnh viện,hospital.png,hospital.mp3,relax|cough|exercise,The ambulance took him to the hospital.
+2.3,medicine,noun,/ˈmed.ɪ.sən/,thuốc,medicine.png,medicine.mp3,relax|cough|exercise,The doctor gave me medicine for my sore throat.
+2.3,cough,verb,/kɒf/,ho,cough.png,cough.mp3,hospital|exercise|relax,Cover your mouth when you cough.
+2.3,headache,noun,/ˈhed.eɪk/,đau đầu,headache.png,headache.mp3,,"My headache is a sharp pain above my eyes."
+2.3,stress,noun,/stres/,căng thẳng,stress.png,stress.mp3,,I feel stress when I worry about school.
+2.3,exercise,verb,/ˈek.sə.saɪz/,tập thể dục,exercise.png,exercise.mp3,cough|hospital|sleepy,We exercise to build muscle and improve our fitness.
+2.3,relax,verb,/rɪˈlæks/,thư giãn,relax.png,relax.mp3,medicine|cough|hospital,I relax by lying still in a warm bath.
+2.3,habit,noun,/ˈhæb.ɪt/,thói quen,habit.png,habit.mp3,,Brushing my teeth daily is a habit I learned.
+2.3,healthy,adjective,/ˈhel.θi/,"khỏe mạnh, lành mạnh",healthy.png,healthy.mp3,,I eat vegetables to stay healthy.
+2.3,sleepy,adjective,/ˈsliː.pi/,buồn ngủ,sleepy.png,sleepy.mp3,,I feel sleepy and can hardly keep my eyes open.
+3.1,cinema,noun,/ˈsɪn.ə.mə/,rạp chiếu phim,cinema.png,cinema.mp3,instrument|costume|exhibition,The cinema sells tickets to see films on a big screen.
+3.1,museum,noun,/mjuːˈziː.əm/,bảo tàng,museum.png,museum.mp3,costume|instrument|concert,The museum keeps dinosaur bones safe for future generations.
+3.1,concert,noun,/ˈkɒn.sət/,buổi hòa nhạc,concert.png,concert.mp3,,Our school orchestra gave a concert for parents on Friday evening.
+3.1,festival,noun,/ˈfes.tɪ.vəl/,lễ hội,festival.png,festival.mp3,,"The town celebrates its harvest festival with food, games, and dancing."
+3.1,instrument,noun,/ˈɪn.strə.mənt/,nhạc cụ,instruments.png,instrument.mp3,cinema|museum|costume,A guitar is a string instrument that you play with your fingers.
+3.1,costume,noun,/ˈkɒs.tjuːm/,trang phục biểu diễn,costume.png,costume.mp3,cinema|instrument|museum,I wore a rabbit costume with long ears in the school play.
+3.1,exhibition,noun,/ˌek.sɪˈbɪʃ.ən/,cuộc triển lãm,exhibition.png,exhibition.mp3,instrument|concert|costume,The gallery held an exhibition of paintings by local artists.
+3.1,audience,noun,/ˈɔː.di.əns/,khán giả,audience.png,audience.mp3,,The audience clapped when the actors bowed at the end of the play.
+3.1,tradition,noun,/trəˈdɪʃ.ən/,truyền thống,traditional.png,tradition.mp3,,Making paper lanterns together is a family tradition that started with Grandma.
+3.1,popular,adjective,/ˈpɒp.jə.lər/,"phổ biến, nổi tiếng",popular.png,popular.mp3,,"This song is popular with my classmates, who all know the words."
+3.2,satellite,noun,/ˈsæt.əl.aɪt/,vệ tinh,satellite.png,satellite.mp3,resume|engineer|smartphone,A satellite orbits Earth and sends weather images back to us.
+3.2,smartphone,noun,/ˈsmɑːt.fəʊn/,điện thoại thông minh,smartphone.png,smartphone.mp3,engineer|database|satellite,My smartphone fits in my pocket and lets me make video calls.
+3.2,engineer,noun,/ˌen.dʒɪˈnɪər/,kỹ sư,engineer.png,engineer.mp3,satellite|database|smartphone,An engineer designed the bridge to make sure it could carry heavy trucks.
+3.2,resume,noun,/ˈrez.juː.meɪ/,sơ yếu lý lịch (CV),resume.png,resume.mp3,satellite|engineer|database,She listed her work experience on her resume before applying for the job.
+3.2,database,noun,/ˈdeɪ.tə.beɪs/,cơ sở dữ liệu,database.png,database.mp3,smartphone|satellite|resume,The school stores student names and grades in a searchable database.
+3.2,algorithm,noun,/ˈæl.ɡə.rɪ.ðəm/,thuật toán,algorithm.png,algorithm.mp3,,This algorithm is a step-by-step plan for sorting names.
+3.2,software,noun,/ˈsɒft.weər/,phần mềm,software.png,software.mp3,,We installed software on our computers to edit photos and make posters.
+3.2,develop,verb,/dɪˈvel.əp/,phát triển,develop.png,develop.mp3,,Our team will develop a new app to help students find library books.
+3.2,innovative,adjective,/ˈɪn.ə.və.tɪv/,mang tính đổi mới,innovative.png,innovative.mp3,,She had an innovative idea that nobody in the class had tried before.
+3.2,artificial,adjective,/ˌɑː.tɪˈfɪʃ.əl/,nhân tạo,artificial.png,artificial.mp3,,The pond is artificial because people dug it and filled it with water.
+3.3,forest,noun,/ˈfɒr.ɪst/,khu rừng,forest.png,forest.mp3,plastic|recycling|volunteer,"The forest is full of tall trees, and squirrels live in their branches."
+3.3,recycling,noun,/ˌriːˈsaɪ.klɪŋ/,việc tái chế,recycling.png,recycling.mp3,forest|volunteer|earthquake,Our school sends used paper for recycling so it can become new paper.
+3.3,plastic,noun,/ˈplæs.tɪk/,nhựa,plastic.png,plastic.mp3,forest|earthquake|volunteer,"This bottle is made of plastic, so it bends when I squeeze it."
+3.3,volunteer,noun,/ˌvɒl.ənˈtɪər/,tình nguyện viên,volunteer.png,volunteer.mp3,,A volunteer helps at the animal shelter on Saturdays without being paid.
+3.3,earthquake,noun,/ˈɜːθ.kweɪk/,trận động đất,earthquake.png,earthquake.mp3,plastic|volunteer|recycling,The ground shook for several seconds during the earthquake.
+3.3,wildlife,noun,/ˈwaɪld.laɪf/,động vật hoang dã,wildlife.png,wildlife.mp3,recycling|plastic|charity,"We watched local wildlife, including deer and foxes, without feeding the animals."
+3.3,charity,noun,/ˈtʃær.ə.ti/,tổ chức từ thiện,charity.png,charity.mp3,,The charity uses donations to buy food for families in need.
+3.3,pollution,noun,/pəˈluː.ʃən/,sự ô nhiễm,pollution.png,pollution.mp3,,Smoke from factories causes air pollution and makes it harder to breathe.
+3.3,climate,noun,/ˈklaɪ.mət/,khí hậu,climate.png,climate.mp3,,"The island has a warm, wet climate, with heavy rain most years."
+3.3,society,noun,/səˈsaɪ.ə.ti/,xã hội,society.png,society.mp3,,"In a fair society, everyone has the same rights under the law."
