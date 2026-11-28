@@ -38,6 +38,7 @@ sealed interface Answer {
     data class Matching(val pairs: List<MatchingPair>, val attempts: List<MatchingPair> = emptyList()) : Answer
     data class FillBlank(val text: String) : Answer
     data class Translate(val tokenIds: List<String>) : Answer
+    data class TranslateText(val text: String) : Answer
     data class SentenceOrder(val tokenIds: List<String>) : Answer
     data class SentenceCorrection(val optionId: String) : Answer
     data class SentenceCompletion(val optionId: String) : Answer

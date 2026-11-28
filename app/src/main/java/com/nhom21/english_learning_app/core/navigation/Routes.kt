@@ -31,7 +31,12 @@ data object Home
 data object Lesson
 
 @Serializable
-data class LearnRound(val roundId: String)
+data class LearnRound(
+    val roundId: String,
+    val topicName: String? = null,
+    val isMatching: Boolean = false,
+    val isApplication: Boolean = false,
+)
 
 @Serializable
 data object Practice

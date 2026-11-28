@@ -2,6 +2,7 @@ package com.nhom21.english_learning_app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 
@@ -18,8 +19,11 @@ internal data class RoundColors(
     val dangerInk: Color,
 )
 
+internal val LocalRoundColors = staticCompositionLocalOf<RoundColors?> { null }
+
 @Composable
 internal fun roundColors(): RoundColors {
+    LocalRoundColors.current?.let { return it }
     val dark = isSystemInDarkTheme()
     val background = if (dark) OwlaColors.DarkBackground else OwlaColors.LightBackground
     val surface = if (dark) OwlaColors.DarkSurface else OwlaColors.LightSurface

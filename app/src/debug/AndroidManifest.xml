@@ -12,6 +12,17 @@
             android:exported="true"
             android:label="@string/round2_demo_app_name"
             android:taskAffinity="${applicationId}.round2demo" />
+        <activity
+            android:name=".features.round.Round3DemoActivity"
+            android:exported="true"
+            android:label="@string/round3_demo_app_name"
+            android:taskAffinity="${applicationId}.round3demo" />
+        <activity
+            android:name=".features.round.Round4DemoActivity"
+            android:exported="true"
+            android:label="@string/round4_brand"
+            android:taskAffinity="${applicationId}.round4demo"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="round4_brand">Owla</string>
+    <string name="round4_loading">Đang tải câu hỏi Round 4</string>
+    <string name="round4_steps">%1$d/%2$d</string>
+    <string name="round4_fill_title">Fill in the blank</string>
+    <string name="round4_fill_select">Chọn từ phù hợp để điền vào chỗ trống.</string>
+    <string name="round4_fill_type">Nhập từ phù hợp vào chỗ trống.</string>
+    <string name="round4_translate_title">Translate this sentence</string>
+    <string name="round4_translate_type">Nhập bản dịch bằng tiếng Anh.</string>
+    <string name="round4_translate_select">Chọn các thẻ để dịch sang tiếng Anh.</string>
+    <string name="round4_translate_type_vi">Nhập bản dịch bằng tiếng Việt.</string>
+    <string name="round4_translate_select_vi">Chọn các thẻ để dịch sang tiếng Việt.</string>
+    <string name="round4_order_title">Put the words in order</string>
+    <string name="round4_order_hint">Chạm các thẻ để tạo thành câu.</string>
+    <string name="round4_check">Check</string>
+    <string name="round4_word_bank">THẺ TỪ</string>
+    <string name="round4_translation">BẢN DỊCH</string>
+    <string name="round4_answer">Câu trả lời</string>
+    <string name="round4_keyboard_mode">Nhập bằng bàn phím</string>
+    <string name="round4_chip_mode">Dùng thẻ từ</string>
+    <string name="round4_correct">✓ Chính xác!</string>
+    <string name="round4_wrong">✕ Chưa đúng</string>
+    <string name="round4_correct_order">Bạn đã sắp xếp đúng câu.</string>
+    <string name="round4_correct_answer">Câu trả lời của bạn chính xác.</string>
+    <string name="round4_wrong_order">Hãy thử sắp xếp lại câu.</string>
+    <string name="round4_wrong_answer">Hãy thử trả lời lại.</string>
+</resources>

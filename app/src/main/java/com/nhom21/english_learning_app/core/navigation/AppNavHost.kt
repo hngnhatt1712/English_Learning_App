@@ -30,6 +30,7 @@ import com.nhom21.english_learning_app.features.auth.WelcomeSuccessScreen
 import com.nhom21.english_learning_app.features.home.HomeRoute
 import com.nhom21.english_learning_app.features.home.HomeViewModel
 import com.nhom21.english_learning_app.features.lesson.LessonRoute
+import com.nhom21.english_learning_app.features.lesson.RoundKind
 import com.nhom21.english_learning_app.features.practice.PracticePlaceholderScreen
 import com.nhom21.english_learning_app.features.profile.ProfileRoute
 import com.nhom21.english_learning_app.features.round.RoundRoute
@@ -138,10 +139,13 @@ fun AppNavHost(
                 startDestination = MainTab.entries.firstOrNull { it.destination == startDestination }
                     ?.destination ?: Home,
                 learnRound = { entry ->
-                    val roundId = remember(entry) { entry.toRoute<LearnRound>().roundId }
+                    val route = remember(entry) { entry.toRoute<LearnRound>() }
                     RoundRoute(
                         onExit = { navController.popBackStack() },
-                        onSubmitted = { navController.previousBackStackEntry?.savedStateHandle?.set("submittedRound", roundId) },
+                        onSubmitted = { navController.previousBackStackEntry?.savedStateHandle?.set("submittedRound", route.roundId) },
+                        topicName = route.topicName,
+                        isMatching = route.isMatching,
+                        isApplication = route.isApplication,
                     )
                 }
             ) { tab, entry ->
@@ -163,8 +167,12 @@ fun AppNavHost(
                         }
                         LessonRoute(
                             viewModel = lesson,
-                            onRoundStart = { roundId ->
-                                navController.navigate(LearnRound(roundId)) { launchSingleTop = true }
+                            onRoundStart = { roundId, topicName, kind ->
+                                navController.navigate(
+                                    LearnRound(roundId, topicName, kind == RoundKind.MATCHING, kind == RoundKind.APPLICATION)
+                                ) {
+                                    launchSingleTop = true
+                                }
                             }
                         )
                     }

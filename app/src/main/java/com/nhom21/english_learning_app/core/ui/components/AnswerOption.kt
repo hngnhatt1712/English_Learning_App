@@ -60,6 +60,7 @@ fun AnswerOption(
     enabled: Boolean = true,
     optionDescription: String? = null,
     indicatorAlignment: Alignment = Alignment.CenterEnd,
+    showIdleIndicator: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val colors = roundColors()
@@ -158,17 +159,19 @@ fun AnswerOption(
             contentAlignment = Alignment.CenterStart,
         ) {
             content()
-            Icon(
-                indicator,
-                contentDescription = null,
-                tint = indicatorTint,
-                modifier = Modifier.align(indicatorAlignment).padding(8.dp).size(24.dp)
-                    .background(face, CircleShape)
-                    .graphicsLayer {
-                        scaleX = pop.value
-                        scaleY = pop.value
-                    },
-            )
+            if (showIdleIndicator || isGraded || selected) {
+                Icon(
+                    indicator,
+                    contentDescription = null,
+                    tint = indicatorTint,
+                    modifier = Modifier.align(indicatorAlignment).padding(8.dp).size(24.dp)
+                        .background(face, CircleShape)
+                        .graphicsLayer {
+                            scaleX = pop.value
+                            scaleY = pop.value
+                        },
+                )
+            }
         }
     }
 }

@@ -243,7 +243,7 @@ internal fun RoundStatus(reason: RoundMessage, onExit: () -> Unit, onRetry: () -
 }
 
 @Composable
-private fun RoundStatusContent(message: String, onExit: () -> Unit, onRetry: (() -> Unit)?) {
+internal fun RoundStatusContent(message: String, onExit: () -> Unit, onRetry: (() -> Unit)?) {
     Column(
         modifier = Modifier.fillMaxSize().background(roundColors().background).safeDrawingPadding().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -157,7 +157,35 @@ class Round3ViewModelTest {
         )
         inFlight.complete(ApiResult.Success(result))
         runCurrent()
-        assertSame(result, (vm.uiState.value as Round3UiState.Completed).result)
+        assertEquals(Round3UiState.RepairIntro(1), vm.uiState.value)
+        vm.startMatchingRepair()
+        assertTrue(vm.matching.isRepair)
+        assertEquals(listOf("l1"), vm.matching.question.left.map { it.id })
+        assertEquals(listOf("r2", "r1"), vm.matching.question.right.map { it.id })
+
+        vm.select("q1", wrong)
+        runCurrent()
+        assertFalse(vm.matching.canContinue)
+        vm.acknowledgeMatchingFeedback("q1", requireNotNull(vm.matching.feedback).id)
+        vm.finishMatchingRepair()
+        val paused = vm.uiState.value as Round3UiState.Completed
+        assertSame(result, paused.result)
+        assertEquals(0, paused.repairedCount)
+
+        vm.startMatchingRepair()
+        assertTrue(vm.matching.isRepair)
+        vm.select("q1", first)
+        runCurrent()
+        assertTrue(vm.matching.canContinue)
+        assertTrue(vm.matching.attempts.isEmpty())
+        vm.nextMatchingQuestion("q1")
+        runCurrent()
+
+        val completed = vm.uiState.value as Round3UiState.Completed
+        assertSame(result, completed.result)
+        assertEquals(1, completed.repairedCount)
+        assertEquals(1, completed.repairTotal)
+        assertEquals(listOf(payload, payload), repo.submissions)
     }
 
     @Test

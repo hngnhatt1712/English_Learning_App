@@ -7,8 +7,17 @@ import com.nhom21.english_learning_app.domain.model.RoundResult
 
 internal sealed interface Round3UiState : RoundUiState {
     data object Exited : Round3UiState
+    data object Loading : Round3UiState
+    data object LoadError : Round3UiState
     data class Submitting(val error: ApiErrorType? = null) : Round3UiState
-    data class Completed(val result: RoundResult, val resultId: Long) : Round3UiState
+    data class RepairIntro(val total: Int) : Round3UiState
+
+    data class Completed(
+        val result: RoundResult,
+        val resultId: Long,
+        val repairedCount: Int = 0,
+        val repairTotal: Int = 0,
+    ) : Round3UiState
 
     data class Question(
         val question: MatchingQuestion,
@@ -23,6 +32,8 @@ internal sealed interface Round3UiState : RoundUiState {
         val checkError: ApiErrorType? = null,
         val pairs: List<MatchingPair> = emptyList(),
         val attempts: List<MatchingPair> = emptyList(),
+        val completedPairsBefore: Int = 0,
+        val isRepair: Boolean = false,
     ) : Round3UiState {
         val canContinue: Boolean get() = pairs.size == question.left.size && pendingPair == null
     }

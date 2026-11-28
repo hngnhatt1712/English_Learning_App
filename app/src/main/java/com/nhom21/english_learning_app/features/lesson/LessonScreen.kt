@@ -60,7 +60,7 @@ import kotlinx.coroutines.flow.collectLatest
 fun LessonRoute(
     modifier: Modifier = Modifier,
     viewModel: LessonViewModel = hiltViewModel(),
-    onRoundStart: (String) -> Unit = {},
+    onRoundStart: (String, String, RoundKind) -> Unit = { _, _, _ -> },
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LessonScreen(
@@ -81,7 +81,7 @@ fun LessonScreen(
     onRetry: () -> Unit,
     onRoundClick: (String) -> Unit,
     onDismissPreview: () -> Unit,
-    onRoundStart: (String) -> Unit,
+    onRoundStart: (String, String, RoundKind) -> Unit,
     events: kotlinx.coroutines.flow.Flow<LessonEvent>?,
     modifier: Modifier = Modifier,
 ) {
@@ -267,11 +267,12 @@ private fun RoundPathRow(
 private fun RoundPreviewSheet(
     preview: RoundPreviewUi,
     onDismiss: () -> Unit,
-    onRoundStart: (String) -> Unit,
+    onRoundStart: (String, String, RoundKind) -> Unit,
 ) {
     val theme = rememberTopicTheme(preview.themeKey)
-    val playableRoundId = preview.round.roundId.takeIf {
-        preview.round.kind == RoundKind.LEARN || preview.round.kind == RoundKind.RECOGNITION
+    val playableRoundId = when (preview.round.kind) {
+        RoundKind.LEARN, RoundKind.RECOGNITION, RoundKind.MATCHING, RoundKind.APPLICATION -> preview.round.roundId
+        RoundKind.FINAL_REVIEW -> null
     }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = if (androidx.compose.foundation.isSystemInDarkTheme()) OwlaColors.DarkSurface else OwlaColors.LightSurface) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -283,7 +284,7 @@ private fun RoundPreviewSheet(
                 onClick = {
                     playableRoundId?.let { roundId ->
                         onDismiss()
-                        onRoundStart(roundId)
+                        onRoundStart(roundId, preview.topicName, preview.round.kind)
                     }
                 },
                 enabled = playableRoundId != null,
@@ -400,7 +401,7 @@ private fun LessonPreview() {
         onRetry = {},
         onRoundClick = {},
         onDismissPreview = {},
-        onRoundStart = {},
+        onRoundStart = { _, _, _ -> },
         events = null,
     )
 }

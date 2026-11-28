@@ -1,5 +1,6 @@
 package com.nhom21.english_learning_app.data.remote.dto
 
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -43,7 +44,15 @@ data class FillBlankAnswerDto(val text: String) : AnswerDto, CheckAnswerDto
 
 @Serializable
 @SerialName("translate")
-data class TranslateAnswerDto(val tokenIds: List<String>) : AnswerDto, CheckAnswerDto
+@OptIn(ExperimentalSerializationApi::class)
+data class TranslateAnswerDto(
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val tokenIds: List<String>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val text: String? = null,
+) : AnswerDto, CheckAnswerDto {
+    init {
+        require((tokenIds == null) != (text == null))
+    }
+}
 
 @Serializable
 @SerialName("sentence_order")

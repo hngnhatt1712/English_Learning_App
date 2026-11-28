@@ -2,4 +2,5 @@
 <resources>
     <string name="round_demo_app_name">Owla Round 1 Demo</string>
     <string name="round2_demo_app_name">Owla Round 2 Demo</string>
+    <string name="round3_demo_app_name">Owla Round 3 Demo</string>
 </resources>

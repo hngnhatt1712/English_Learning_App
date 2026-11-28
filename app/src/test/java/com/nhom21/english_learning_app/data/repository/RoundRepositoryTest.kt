@@ -192,6 +192,28 @@ class RoundRepositoryTest {
     }
 
     @Test
+    fun translateCheckAndSubmitEncodeOnlyTheSelectedInputMode() = runTest {
+        val feedback = """{"questionId":"$QUESTION_ID","isCorrect":true,
+            "correctAnswer":{"type":"translate","tokenIds":["t1","t2"]},"explanation":null}"""
+        val typed = Answer.TranslateText("I read.")
+        val chips = Answer.Translate(listOf("t1", "t2"))
+        enqueue(feedback)
+        assertEquals(chips, repository.checkAnswer(QUESTION_ID, typed).success().correctAnswer)
+        assertPost("/api/v1/questions/$QUESTION_ID/check",
+            """{"answer":{"type":"translate","text":"I read."}}""", 1)
+
+        enqueue(feedback)
+        assertTrue(repository.checkAnswer(QUESTION_ID, chips).success().isCorrect)
+        assertPost("/api/v1/questions/$QUESTION_ID/check",
+            """{"answer":{"type":"translate","tokenIds":["t1","t2"]}}""", 1)
+
+        enqueue(roundResult(score = 100.0, bestScore = 100.0, stars = 3, bestStars = 3, results = feedback))
+        assertTrue(repository.submitRound(ROUND_ID, listOf(RoundAnswer(QUESTION_ID, typed))).success().passed)
+        assertPost("/api/v1/rounds/$ROUND_ID/submit",
+            """{"answers":[{"questionId":"$QUESTION_ID","answer":{"type":"translate","text":"I read."}}]}""", 1)
+    }
+
+    @Test
     fun submitSendsCallerAnswersAndEmptyListAndMapsSprintFiveResults() = runTest {
         enqueue(roundResult(score = 66.6, bestScore = 83.3, stars = 0, bestStars = 2, results = questionResult))
         val scored = repository.submitRound(ROUND_ID, listOf(RoundAnswer(QUESTION_ID, Answer.PictureChoice("o2")))).success()
